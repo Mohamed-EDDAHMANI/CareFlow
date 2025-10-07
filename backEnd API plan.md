@@ -3,20 +3,27 @@
 project/
 │
 ├─ src/
-│   ├─ config/              # configurations: db, jwt, redis, env variables
-│   ├─ controllers/         # logique pour gérer requests/responses
-│   ├─ services/            # business logic / logique métier
-│   ├─ models/              # Mongoose schemas
-│   ├─ routes/              # définition des routes et attach controllers
-│   ├─ middlewares/         # auth, validation, error handling, logging
-│   ├─ utils/               # fonctions utilitaires: email, token, etc
-│   └─ app.js               # init express + middlewares globaux
+│   ├─ config/                      # configurations: db, jwt, redis, env variables
+│   ├─ controllers/                 # logique pour gérer requests/responses
+│   ├─ services/                    # business logic / logique métier
+│   ├─ models/                      # Mongoose schemas
+|   |   ├─ appointmentModel.js      # Mongo model / shema
+|   |   ├─ medicalRecordModel.js    # Mongo modul / shema
+|   |   ├─ notificationModel.js     # Mongo modul / shema
+|   |   ├─ roleModel.js             # Mongo modul / shema
+|   |   └─ userModel.js             # Mongo modul / shema
+│   ├─ routes/                      # définition des routes et attach controllers
+│   ├─ middlewares/                 # auth, validation, error handling, logging
+|   |   └─ errorHandler.js          # class to add new error 
+│   ├─ utils/                       # fonctions utilitaires: email, token, etc
+|   |   └─ AppError.js              # class to add new error 
+│   └─ app.js                       # init express + middlewares globaux
 │
-├─ tests/                   # tests unitaires et d’intégration
+├─ tests/                           # tests unitaires et d’intégration
 │
-├─ docker/                  # fichiers spécifiques Docker
-│   ├─ Dockerfile           # build image Node.js
-│   └─ docker-compose.yml   # orchestration services: node, mongo, redis, etc
+├─ docker/                          # fichiers spécifiques Docker
+│   ├─ Dockerfile                   # build image Node.js
+│   └─ docker-compose.yml           # orchestration services: node, mongo, redis, etc
 │
 ├─ package.json
 ├─ .env                     # variables environnement pour Docker
