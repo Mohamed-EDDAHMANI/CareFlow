@@ -27,6 +27,8 @@ services:
 
   mongo:
     image: mongo:6.0
+    logging:
+      driver: "none"
     container_name: careflow_mongo
     restart: unless-stopped
     environment:
@@ -37,6 +39,9 @@ services:
       - mongo_data:/data/db
     networks:
       - careflow-net
+    ports:
+      - "27017:27017"
+    command: ["mongod", "--bind_ip_all"]
 
   redis:
     image: redis:7-alpine

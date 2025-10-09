@@ -8,19 +8,37 @@ const appointmentSchema = new mongoose.Schema({
   start: { type: Date, required: true },
   end: { type: Date, required: true },
   reason: { type: String },
-  document: [{ type: String }], // here the dokument has a value just when type is suivi
+  document: [{ type: String }], // documents for suivi
   status: { type: String, enum: ["scheduled", "completed", "cancelled"], default: "scheduled" }
 }, { timestamps: true });
 
-// method to mark as completed
+// Mark appointment as completed
 appointmentSchema.methods.markCompleted = async function() {
   this.status = "completed";
-  await this.save();
+  return this.save();
 };
 
+// Cancel appointment
 appointmentSchema.methods.cancel = async function() {
   this.status = "cancelled";
-  await this.save();
+  return this.save();
+};
+
+// Check if appointment is in the past
+appointmentSchema.methods.isPast = function() {
+  return new Date() > this.end;
+};
+
+// Check if appointment is today
+appointmentSchema.methods.isToday = function() {
+  const today = new Date();
+  const appointmentDate = new Date(this.start);
+  return today.toDateString() === appointmentDate.toDateString();
+};
+
+// Get duration in minutes
+appointmentSchema.methods.getDuration = function() {
+  return Math.round((this.end - this.start) / (1000 * 60));
 };
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);

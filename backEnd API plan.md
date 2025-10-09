@@ -4,30 +4,50 @@ project/
 │
 ├─ src/
 │   ├─ config/                      # configurations: db, jwt, redis, env variables
+│   │   └─ db.js                    # MongoDB connection with retry logic
 │   ├─ controllers/                 # logique pour gérer requests/responses
 │   ├─ services/                    # business logic / logique métier
 │   ├─ models/                      # Mongoose schemas
-|   |   ├─ appointmentModel.js      # Mongo model / shema
-|   |   ├─ medicalRecordModel.js    # Mongo modul / shema
-|   |   ├─ notificationModel.js     # Mongo modul / shema
-|   |   ├─ roleModel.js             # Mongo modul / shema
-|   |   └─ userModel.js             # Mongo modul / shema
+│   │   ├─ appointmentModel.js      # Appointment/RDV schema with methods
+│   │   ├─ medicalRecordModel.js    # Medical records with actions array
+│   │   ├─ notificationModel.js     # Notifications with status/read tracking
+│   │   ├─ roleModel.js             # Role management (admin, practitioner, etc.)
+│   │   ├─ userModel.js             # User with permissions & JWT methods
+│   │   ├─ HolidayModel.js          # System holidays/clinic closure dates
+│   │   ├─ WorkingHourModel.js      # Daily working hours configuration
+│   │   └─ stucteModels.md          # Models documentation/structure guide
 │   ├─ routes/                      # définition des routes et attach controllers
+│   │   ├─ authRoutes.js            # Authentication endpoints
+│   │   ├─ userRoutes.js            # User management endpoints
+│   │   ├─ roleRoutes.js            # Role & permissions endpoints
+│   │   ├─ appointmentRoutes.js     # Appointment CRUD endpoints
+│   │   ├─ medicalRecordRoutes.js   # Medical records endpoints
+│   │   ├─ notificationRoutes.js    # Notification management endpoints
+│   │   └─ systemRoutes.js          # System settings (working hours, holidays)
 │   ├─ middlewares/                 # auth, validation, error handling, logging
-|   |   └─ errorHandler.js          # class to add new error 
+│   │   └─ errorHandler.js          # Global error handling middleware
 │   ├─ utils/                       # fonctions utilitaires: email, token, etc
-|   |   └─ AppError.js              # class to add new error 
-│   └─ app.js                       # init express + middlewares globaux
+│   │   └─ AppError.js              # Custom error class for operational errors
+│   └─ app.js                       # Express app initialization + middleware setup
 │
-├─ tests/                           # tests unitaires et d’intégration
+├─ tests/                           # tests unitaires et d'intégration
 │
 ├─ docker/                          # fichiers spécifiques Docker
-│   ├─ Dockerfile                   # build image Node.js
-│   └─ docker-compose.yml           # orchestration services: node, mongo, redis, etc
+│   ├─ dockerfile                   # build image Node.js (dev mode)
+│   └─ docker-compose.yml           # orchestration: node, mongo, redis services
 │
-├─ package.json
-├─ .env                     # variables environnement pour Docker
-└─ .dockerignore            # fichiers à ignorer dans l'image
+├─ config/                          # root-level configurations
+│   └─ db.js                        # MongoDB connection with retry logic
+│
+├─ documentation/                   # Project documentation
+│   ├─ system_roles_structure.md    # Business roles & responsibilities spec
+│   ├─ request_types.md             # Express request body types guide
+│   └─ Express_custem_ErrorHandling.md # Error handling patterns & examples
+│
+├─ package.json                     # Dependencies & scripts
+├─ .env                            # Environment variables (Docker-ready)
+├─ .dockerignore                   # Files to exclude from Docker build
+└─ README_MODELS.md                # Models documentation & usage examples
 
 ==========================================================================================
 

@@ -1,25 +1,61 @@
-// src/app.js or src/server.js
+// src/app.js
 import express from "express";
-import { errorHandler } from './middlewares/errorHandler.js';
+import cors from "cors";
+import { errorHandler } from "./middlewares/errorHandler.js";
 import { connectDB } from "../config/db.js";
+import morgan from "morgan";
+import fs from 'fs';
 
+// ===== Import Routes =====
+import routes from "./routes/index.js";
+
+// ===== Initialize App =====
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware json
+// ===== Middleware =====
 app.use(express.json());
+app.use(cors());
 
-app.get("/health", (req, res) => res.send("OK"));
+// ===== Morgan config =====
+// ( print all request / like a file )
+app.use(morgan('dev'));
+app.use(morgan('combined', { stream: fs.createWriteStream('./access.log', { flags: 'a' }) }));
 
-// Example route
-app.get("/", (req, res) => {
-  res.send("Server is running");
+// ===== if i will chose print the logis en a file 
+// const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
+// app.use(morgan('combined', { stream: accessLogStream }));
+
+// ===== Health Check =====
+app.get("/health", (req, res) => res.status(200).send("OK"));
+app.get("/", (req, res) => res.send("Server is running 🚀"));
+
+// ===== API Routes =====
+app.use('/api', routes);
+
+
+// ===== 404 Handler =====
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.originalUrl}`,
+  });
 });
 
-// midd gestion des errors
+// ===== Global Error Handler =====
 app.use(errorHandler);
 
+// ===== Start Server =====
+connectDB()
+  .then(() => {
+    app.listen(PORT, () =>
+      console.log(`✅ Server running on port ${PORT}`)
+    );
+  })
+  .catch((error) => {
+    console.error("❌ Database connection failed:", error.message);
+    process.exit(1);
+  });
 
-connectDB().then(() => {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-});
+export default app;
+

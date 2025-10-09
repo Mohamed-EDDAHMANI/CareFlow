@@ -14,9 +14,25 @@ const medicalRecordSchema = new mongoose.Schema({
   typeMedical: { type: String, required: true },
   description: { type: String },
   document: { type: String }, // optional main document
-  actions: [actionSchema], // ici toutes les actions liées à ce record
+  actions: [actionSchema], // جميع الأفعال المتعلقة بالسجل
   resultDate: { type: Date, default: Date.now }
 }, { timestamps: true });
+
+// Add new action
+medicalRecordSchema.methods.addAction = function(type, description, document = null) {
+  this.actions.push({
+    type,
+    description,
+    document,
+    createdAt: new Date()
+  });
+  return this.save();
+};
+
+// Get latest action
+medicalRecordSchema.methods.getLatestAction = function() {
+  return this.actions.sort((a, b) => b.createdAt - a.createdAt)[0];
+};
 
 const MedicalRecord = mongoose.model("MedicalRecord", medicalRecordSchema);
 export default MedicalRecord;

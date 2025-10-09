@@ -8,46 +8,64 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   birthDate: { type: Date },
   roleId: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true },
-  roleType: { type: String, enum: ["admin", "doctore", "infermeri","accueil", "patient"], default: "patient" },
   status: { type: String, enum: ["active", "suspended"], default: "active" },
-  refreshToken: { type: String }
+  refreshToken: { type: String },
+  cin: { type: String },
+  permissions: {
+    create_user: { type: Boolean, default: true },
+    delete_user: { type: Boolean, default: false },
+    update_user: { type: Boolean, default: false },
+
+    create_appointment: { type: Boolean, default: false },
+    update_appointment: { type: Boolean, default: false },
+    cancel_appointment: { type: Boolean, default: false },
+    view_appointment: { type: Boolean, default: false },
+
+    create_medical_record: { type: Boolean, default: false },
+    view_medical_record: { type: Boolean, default: false },
+    update_medical_record: { type: Boolean, default: false },
+
+    send_notification: { type: Boolean, default: false },
+    manage_system: { type: Boolean, default: false }
+  }
 }, { timestamps: true });
 
-
-userSchema.pre("save", async function(next) {
-  if(!this.isModified("password")) return next();
+// Hash password before save
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-userSchema.methods.matchPassword = async function(enteredPassword) {
+// Check password
+userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-userSchema.methods.generateAccessToken = function() {
-  return jwt.sign({ id: this._id, role: this.roleType }, process.env.JWT_ACCESS_SECRET, { expiresIn: "1h" });
+// Generate JWT access token
+userSchema.methods.generateAccessToken = function () {
+  return jwt.sign(
+    { id: this._id, roleId: this.roleId },
+    process.env.JWT_ACCESS_SECRET,
+    { expiresIn: "1h" }
+  );
 };
 
-userSchema.methods.generateRefreshToken = function() {
-  return jwt.sign({ id: this._id, role: this.roleType }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
+// Generate JWT refresh token
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    { id: this._id, roleId: this.roleId },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: "7d" }
+  );
 };
 
-userSchema.methods.isAdmin = function() {
-  return this.roleType === "admin";
-};
-
-userSchema.methods.isActive = function() {
-  return this.status === "active";
-};
-
-// whitelist of fields allowed to update
+// Update single field
 const allowedFields = ["name", "birthDate", "password"];
+userSchema.methods.updateField = async function (field, value) {
+  if (!allowedFields.includes(field)) throw new Error("Field cannot be updated");
 
-// update a single field
-userSchema.methods.updateField = async function(field, value) {
-  if(!allowedFields.includes(field)) throw new Error("Field cannot be updated");
-
-  if(field === "password") {
+  if (field === "password") {
     this.password = await bcrypt.hash(value, 10);
   } else {
     this[field] = value;
@@ -57,18 +75,34 @@ userSchema.methods.updateField = async function(field, value) {
   return this;
 };
 
-// update multiple fields at once
-userSchema.methods.updateFields = async function(fieldsObj) {
-  for(const key in fieldsObj) {
-    if(!allowedFields.includes(key)) continue;
-    
-    if(key === "password") {
+// Update multiple fields
+userSchema.methods.updateFields = async function (fieldsObj) {
+  for (const key in fieldsObj) {
+    if (!allowedFields.includes(key)) continue;
+    if (key === "password") {
       this.password = await bcrypt.hash(fieldsObj[key], 10);
     } else {
       this[key] = fieldsObj[key];
     }
   }
+  await this.save();
+  return this;
+};
 
+// Check if active
+userSchema.methods.isActive = function () {
+  return this.status === "active";
+};
+
+// Suspend / activate user
+userSchema.methods.suspend = async function () {
+  this.status = "suspended";
+  await this.save();
+  return this;
+};
+
+userSchema.methods.activate = async function () {
+  this.status = "active";
   await this.save();
   return this;
 };
