@@ -1,21 +1,17 @@
-import mongoose from 'mongoose';
 import AppError from '../utils/appError.js';
-import { userValidation } from '../validations/userValidation.js';
+import User from "../models/userModel.js";
+import catchAsync from '../utils/catchAsync.js';
+import { verifyToken, generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 
-export const register = async (req, res) => {
-    const { error } = userValidation.validate(req.body);
-    if (error) {
-        throw new AppError(error.details[0].message, 400);
-    }
+export const register = catchAsync(async (req, res, next) => {
     const { name, email, password, birthDate, roleId, status, cin } = req.body;
     // Check if user already exists
-    const existingUser = await mongoose.model('User').findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
         throw new AppError('Email already in use', 400);
     }
 
     // Create new user
-    const User = mongoose.model('User');
     const newUser = new User({
         name,
         email,
@@ -49,18 +45,13 @@ export const register = async (req, res) => {
         success: true,
         message: 'User registered successfully',
     });
-}
+});
 
-export const login = async (req, res) => {
+export const login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
-
-    // Validate user input
-    if (!email || !password) {
-        throw new AppError('Email and password are required', 400);
-    }
-
+    
     // Check if user exists
-    const existingUser = await mongoose.model('User').findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (!existingUser) {
         throw new AppError('Invalid email or password', 401);
     }
@@ -68,12 +59,13 @@ export const login = async (req, res) => {
     // Check password
     const isMatch = await existingUser.matchPassword(password);
     if (!isMatch) {
+        console.log(isMatch)
         throw new AppError('Invalid email or password', 401);
     }
 
     // Generate tokens
-    const accessToken = existingUser.generateAccessToken();
-    const refreshToken = existingUser.generateRefreshToken();
+    const accessToken = generateAccessToken(existingUser);
+    const refreshToken = generateRefreshToken(existingUser);
     existingUser.refreshToken = refreshToken;
     await existingUser.save();
 
@@ -85,4 +77,53 @@ export const login = async (req, res) => {
             refreshToken
         }
     });
-}
+});
+
+export const logout = catchAsync(async (req, res, next) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+        throw new AppError('Refresh token is required', 400);
+    }   
+
+    // Find user by refresh token
+    const existingUser = await User.findOne({ refreshToken });
+    if (!existingUser) {
+        throw new AppError('Invalid refresh token', 401);
+    }   
+    // Invalidate refresh token
+    existingUser.refreshToken = null;
+    await existingUser.save();
+    res.status(200).json({
+        success: true,
+        message: 'User logged out successfully'
+    });
+});
+
+export const refreshToken = catchAsync(async (req, res, next) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+        throw new AppError('Refresh token is required', 400);
+    }
+    // Find user by refresh token
+    const existingUser = await User.findOne({ refreshToken });
+    if (!existingUser) {
+        throw new AppError('Invalid refresh token', 401);
+    }
+    // verify the refresh token
+    const isValid = verifyToken(refreshToken, "refresh");
+    if (!isValid) {
+        existingUser.refreshToken = null;
+        await existingUser.save();
+        throw new AppError('Invalid or expired refresh token', 401);
+    }
+
+    // Generate new tokens
+    const newAccessToken = existingUser.generateAccessToken();
+    res.status(200).json({
+        success: true,
+        message: 'Token refreshed successfully',
+        data: {
+            accessToken: newAccessToken,
+        }
+    });
+});

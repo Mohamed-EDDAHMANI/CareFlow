@@ -7,7 +7,7 @@ METHOD = POST
 ROUTE = /auth/login
 CONTENT_TYPE = Content-Type: application/json
 EMAIL = dsimo4323@gmail.com
-PASSWORD = simosimo
+PASSWORD = 123456
 
 # ---------------------------------
 # Docker Commands
