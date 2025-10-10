@@ -6,6 +6,9 @@ import { connectDB } from "../config/db.js";
 import morgan from "morgan";
 import fs from 'fs';
 
+// insertion if the db empty
+import initDB from "./seeders/initDB.js";
+
 // ===== Import Routes =====
 import routes from "./routes/index.js";
 
@@ -47,7 +50,11 @@ app.use(errorHandler);
 
 // ===== Start Server =====
 connectDB()
-  .then(() => {
+  .then(async () => {
+
+    // insertion of db
+    await initDB();
+
     app.listen(PORT, () =>
       console.log(`✅ Server running on port ${PORT}`)
     );

@@ -6,8 +6,8 @@ API_URL = $(BASE_URL)/api
 METHOD = POST
 ROUTE = /auth/login
 CONTENT_TYPE = Content-Type: application/json
-EMAIL = test@test.com
-PASSWORD = 123456
+EMAIL = dsimo4323@gmail.com
+PASSWORD = simosimo
 
 # ---------------------------------
 # Docker Commands
@@ -51,7 +51,7 @@ login:
 
 # Quick register test  
 register:
-	make api METHOD=POST ROUTE=/auth/register CONTENT='{"name":"Test User","email":"$(EMAIL)","password":"$(PASSWORD)"}'
+	make api METHOD=POST ROUTE=/auth/register CONTENT='{"name":"Test User","email":"$(EMAIL)","password":"$(PASSWORD)","birthDate":"$(BIRTHDAY)","roleId":"$(ROLE_ID)","status":"$(STATUS)","cin":"$(CIN)"}'
 
 # Quick health check
 ping:

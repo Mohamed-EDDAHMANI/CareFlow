@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
   roleId: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true },
   status: { type: String, enum: ["active", "suspended"], default: "active" },
   refreshToken: { type: String },
-  cin: { type: String },
+  cin: { type: String , required: true, unique: true },
   permissions: {
     create_user: { type: Boolean, default: true },
     delete_user: { type: Boolean, default: false },
