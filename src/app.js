@@ -8,6 +8,7 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 dotenv.config();
 import redisClient from './config/redis.js';
+import { initRedis } from './config/redis.js';
 
 // insertion if the db empty
 import initDB from "./seeders/initDB.js";
@@ -55,6 +56,8 @@ app.use(errorHandler);
 // ===== Start Server =====
 connectDB()
   .then(async () => {
+
+    await initRedis();
 
     // insertion of db
     await initDB();
