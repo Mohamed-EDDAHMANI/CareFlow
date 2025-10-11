@@ -5,7 +5,9 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { connectDB } from "../config/db.js";
 import morgan from "morgan";
 import fs from 'fs';
-import { createClient } from 'redis';
+import dotenv from 'dotenv';
+dotenv.config();
+import redisClient from './config/redis.js';
 
 // insertion if the db empty
 import initDB from "./seeders/initDB.js";
@@ -19,6 +21,7 @@ const PORT = process.env.PORT || 3000;
 
 // ===== Middleware =====
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // ===== Morgan config =====
@@ -49,12 +52,6 @@ app.use((req, res, next) => {
 // ===== Global Error Handler =====
 app.use(errorHandler);
 
-const redis = createClient({
-  url: 'redis://localhost:6379'
-});
-redis.on('error', err => console.log('Redis Error:', err));
-await redis.connect();
-console.log('✅ Connected to Redis');
 // ===== Start Server =====
 connectDB()
   .then(async () => {

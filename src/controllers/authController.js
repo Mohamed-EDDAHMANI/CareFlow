@@ -3,12 +3,13 @@ import User from "../models/userModel.js";
 import catchAsync from '../utils/catchAsync.js';
 import { verifyToken, generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import Role from '../models/roleModel.js';
+import redisClient from '../config/redis.js';
 
 export const register = catchAsync(async (req, res, next) => {
     const { name, email, password, birthDate, status, cin } = req.body;
     // Check if user already exists
     const roleId = await Role.findOne({ name: 'patient' }).select('_id');
-    if(!roleId) {
+    if (!roleId) {
         throw new AppError('Default role not found', 500);
     }
     // Check if user already exists
@@ -36,8 +37,9 @@ export const register = catchAsync(async (req, res, next) => {
 });
 
 export const login = catchAsync(async (req, res, next) => {
-    const { email, password } = req.body;
-    
+    console.log(req.body)
+    const { email , password } = req.body;
+
     // Check if user exists
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
@@ -57,12 +59,25 @@ export const login = catchAsync(async (req, res, next) => {
     existingUser.refreshToken = refreshToken;
     await existingUser.save();
 
+    delete existingUser.password;
+    delete existingUser.refreshToken;
+    const userData = {
+        id: existingUser._id,
+        name: existingUser.name,
+        email: existingUser.email,
+        roleId: existingUser.roleId,
+        status: existingUser.status,
+        permissions: existingUser.permissions
+    };
+    await redisClient.set(`user:${existingUser._id}`, JSON.stringify(userData), { EX: 900 });
+
     res.status(200).json({
         success: true,
         message: 'User logged in successfully',
         data: {
             accessToken,
-            refreshToken
+            refreshToken,
+            permissions: existingUser.permissions
         }
     });
 });
@@ -71,13 +86,13 @@ export const logout = catchAsync(async (req, res, next) => {
     const { refreshToken } = req.body;
     if (!refreshToken) {
         throw new AppError('Refresh token is required', 400);
-    }   
+    }
 
     // Find user by refresh token
     const existingUser = await User.findOne({ refreshToken });
     if (!existingUser) {
         throw new AppError('Invalid refresh token', 401);
-    }   
+    }
     // Invalidate refresh token
     existingUser.refreshToken = null;
     await existingUser.save();

@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
   refreshToken: { type: String },
   cin: { type: String , required: true, unique: true },
   permissions: {
-    create_user: { type: Boolean, default: true },
+    create_user: { type: Boolean, default: false },
     delete_user: { type: Boolean, default: false },
     update_user: { type: Boolean, default: false },
 

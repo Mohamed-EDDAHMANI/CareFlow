@@ -96,7 +96,7 @@ export default async function initDB() {
             console.log("initDB: holiday created");
         }
 
-        console.log("initDB: finished");
+        console.log("✅ initDB: finished");
     } catch (err) {
         console.error("initDB error:", err.message || err);
     }

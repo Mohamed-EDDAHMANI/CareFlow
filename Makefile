@@ -8,7 +8,8 @@ ROUTE = /auth/login
 CONTENT_TYPE = Content-Type: application/json
 EMAIL = dsimo4323@gmail.com
 PASSWORD = simosimo
-
+ACCESS_TOKEN_ADMIN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZWE0YjQ3NmNmZTdjMDg0YjUxZTc5NSIsInJvbGVJZCI6IjY4ZTkxYTc4NGM0MWE5ZmM1NWFjNGUwMCIsIm5hbWUiOiJNb2hhbWVkIEFMSSIsImlhdCI6MTc2MDIxNTkzMywiZXhwIjoxNzYwMjE5NTMzfQ.y523bsh4yRr00r5edexLtrmE7z3r4VaO6PeUj3tTqDg
+ERFRESH_TOKEN_ADMIN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZWE0YjQ3NmNmZTdjMDg0YjUxZTc5NSIsInJvbGVJZCI6IjY4ZTkxYTc4NGM0MWE5ZmM1NWFjNGUwMCIsIm5hbWUiOiJNb2hhbWVkIEFMSSIsImlhdCI6MTc2MDIxNTkzMywiZXhwIjoxNzYwODIwNzMzfQ.vhrjCTMJ1ZMoGA5rnaIn0rkz9UVuJDamGf54Ej14BKk
 # ---------------------------------
 # Docker Commands
 # ---------------------------------

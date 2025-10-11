@@ -6,6 +6,10 @@ import Role from '../models/roleModel.js';
 export const createUser = catchAsync(async (req, res, next) => {
     const { name, email, password, birthDate, roleId, status, cin } = req.body;
     // Check if user already exists
+    res.status(201).json({
+        success: true,
+        message: 'User created successfully',
+    });
     const existingUser = await User.findOne({ email });
     if (existingUser) {
         throw new AppError('Email already in use', 400);
