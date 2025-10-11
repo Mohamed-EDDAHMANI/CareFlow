@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import mongoose from 'mongoose';
 import { register, login } from '../controllers/authController.js';
-import { registerSchema, loginSchema } from '../validations/joiValidation.js';
+import { registerSchemaJoi, loginSchemaJoi } from '../validations/joiValidation.js';
 import validate from '../middlewares/validate.js';
 
 const router = Router();
@@ -27,9 +27,9 @@ router.get('/test-db', async (req, res) => {
   }
 });
 
-router.post('/login', validate(loginSchema), login);
+router.post('/login', validate(loginSchemaJoi), login);
 
-router.post('/register', validate(registerSchema), register);
+router.post('/register', validate(), register);
 
 router.post('/refresh', (req, res) => {
   res.send('Refresh token route');

@@ -9,6 +9,9 @@ import Holiday from "../models/HolidayModel.js";
 
 const DEFAULT_ADMIN_EMAIL = process.env.INIT_ADMIN_EMAIL || "admin@careflow.local";
 const DEFAULT_ADMIN_PASS = process.env.INIT_ADMIN_PASSWORD || "admin123";
+const DEFAULT_ADMIN_NAME = process.env.DEFAULT_ADMIN_NAME || "admin";
+const DEFAULT_ADMIN_CIN = process.env.DEFAULT_ADMIN_CIN || "AD XXXXXX";
+const DEFAULT_ADMIN_BIRTHDATE = process.env.DEFAULT_ADMIN_BIRTHDATE || "1990-01-01";
 
 export default async function initDB() {
     try {
@@ -26,7 +29,8 @@ export default async function initDB() {
                 { name: "admin", description: "Gère les accès" },
                 { name: "doctore", description: "Fournit des soins" },
                 { name: "infermeri", description: "Assiste les patients" },
-                { name: "accueil", description: "Gère l’accueil" }
+                { name: "accueil", description: "Gère l’accueil" },
+                { name: "patient", description: "Accède aux soins" }
             ];
 
             await Role.insertMany(roles);
@@ -40,13 +44,14 @@ export default async function initDB() {
             const adminRole = await Role.findOne({ name: "admin" });
             if (!adminRole) throw new Error("initDB: admin role not found");
 
-            const hashed = await bcrypt.hash(DEFAULT_ADMIN_PASS, 10);
             const adminUser = new User({
-                name: "System Admin",
+                name: DEFAULT_ADMIN_NAME,
                 email: DEFAULT_ADMIN_EMAIL,
-                password: hashed,
+                password: DEFAULT_ADMIN_PASS,
                 roleId: adminRole._id,
                 status: "active",
+                cin: DEFAULT_ADMIN_CIN,
+                birthDate: new Date(DEFAULT_ADMIN_BIRTHDATE),
                 permissions: {
                     create_user: true,
                     delete_user: true,

@@ -5,6 +5,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { connectDB } from "../config/db.js";
 import morgan from "morgan";
 import fs from 'fs';
+import { createClient } from 'redis';
 
 // insertion if the db empty
 import initDB from "./seeders/initDB.js";
@@ -48,6 +49,12 @@ app.use((req, res, next) => {
 // ===== Global Error Handler =====
 app.use(errorHandler);
 
+const redis = createClient({
+  url: 'redis://localhost:6379'
+});
+redis.on('error', err => console.log('Redis Error:', err));
+await redis.connect();
+console.log('✅ Connected to Redis');
 // ===== Start Server =====
 connectDB()
   .then(async () => {
@@ -58,6 +65,7 @@ connectDB()
     app.listen(PORT, () =>
       console.log(`✅ Server running on port ${PORT}`)
     );
+    
   })
   .catch((error) => {
     console.error("❌ Database connection failed:", error.message);

@@ -30,7 +30,6 @@ Content-Type: application/json
   "email": "john@example.com",
   "password": "password123",
   "birthDate": "1990-01-01",
-  "roleId": "64f1a2b3c4d5e6f7g8h9i0j1",
   "cin": "AB123456"
 }
 ```

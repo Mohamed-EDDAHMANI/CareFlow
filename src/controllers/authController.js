@@ -2,9 +2,15 @@ import AppError from '../utils/appError.js';
 import User from "../models/userModel.js";
 import catchAsync from '../utils/catchAsync.js';
 import { verifyToken, generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
+import Role from '../models/roleModel.js';
 
 export const register = catchAsync(async (req, res, next) => {
-    const { name, email, password, birthDate, roleId, status, cin } = req.body;
+    const { name, email, password, birthDate, status, cin } = req.body;
+    // Check if user already exists
+    const roleId = await Role.findOne({ name: 'patient' }).select('_id');
+    if(!roleId) {
+        throw new AppError('Default role not found', 500);
+    }
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -23,24 +29,6 @@ export const register = catchAsync(async (req, res, next) => {
     });
     await newUser.save();
 
-    // // Generate tokens
-    // const accessToken = newUser.generateAuthToken();
-    // const refreshToken = newUser.generateRefreshToken();
-    // newUser.refreshToken = refreshToken;
-    // await newUser.save();
-
-    // Exclude sensitive fields from response
-    // const userResponse = newUser.toObject();
-    // delete userResponse.password;
-    // delete userResponse.refreshToken;
-
-    // res.cookie('refreshToken', refreshToken, {
-    //     httpOnly: true,
-    //     secure: true,
-    //     sameSite: 'Strict',
-    //     maxAge: 7 * 24 * 60 * 60 * 1000
-    // });
-
     res.status(201).json({
         success: true,
         message: 'User registered successfully',
@@ -53,14 +41,14 @@ export const login = catchAsync(async (req, res, next) => {
     // Check if user exists
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
-        throw new AppError('Invalid email or password', 401);
+        throw new AppError('Invalid email or password !!', 401);
     }
 
     // Check password
     const isMatch = await existingUser.matchPassword(password);
     if (!isMatch) {
         console.log(isMatch)
-        throw new AppError('Invalid email or password', 401);
+        throw new AppError('Invalid email or password !', 401);
     }
 
     // Generate tokens

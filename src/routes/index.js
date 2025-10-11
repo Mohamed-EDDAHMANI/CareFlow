@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 // ===== Import All Route Files =====
 import authRoutes from './authRoutes.js';
-// import userRoutes from './userRoutes.js';
+import userRoutes from './userRoutes.js';
 // import roleRoutes from './roleRoutes.js';
 // import appointmentRoutes from './appointmentRoutes.js';
 // import medicalRecordRoutes from './medicalRecordRoutes.js';
@@ -20,7 +20,7 @@ const router = Router();
 router.use('/auth', authRoutes);
 
 // // 👥 User Management (CRUD, suspend/activate, profile, search)
-// router.use('/users', userRoutes);
+router.use('/users', userRoutes);
 
 // // 🛡️ Role & Permissions Management
 // router.use('/roles', roleRoutes);
