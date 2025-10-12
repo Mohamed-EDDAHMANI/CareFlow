@@ -1,4 +1,5 @@
 import AppError from '../utils/appError.js';
+import mongoose from 'mongoose';
 import User from "../models/userModel.js";
 import catchAsync from '../utils/catchAsync.js';
 import Role from '../models/roleModel.js';
@@ -6,10 +7,6 @@ import Role from '../models/roleModel.js';
 export const createUser = catchAsync(async (req, res, next) => {
     const { name, email, password, birthDate, roleId, status, cin } = req.body;
     // Check if user already exists
-    res.status(201).json({
-        success: true,
-        message: 'User created successfully',
-    });
     const existingUser = await User.findOne({ email });
     if (existingUser) {
         throw new AppError('Email already in use', 400);
@@ -57,8 +54,11 @@ export const deleteUser = catchAsync(async (req, res, next) => {
 });
 
 export const getUserById = catchAsync(async (req, res, next) => {
-    const { userId } = req.params
-    const user = await User.findById(userId).select("-password -refreshToken")
+    const { id } = req.params
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError('Invalid user ID format', 400);
+    }
+    const user = await User.findById(id).select("-password -refreshToken")
     if (!user) {
         throw new AppError('User not found', 400);
     }
@@ -70,8 +70,9 @@ export const getUserById = catchAsync(async (req, res, next) => {
         },
     })
 });
+
 export const getUsers = catchAsync(async (req, res, next) => {
-    const users = await User.findAll().select("-password -refreshToken")
+    const users = await User.find().select("-password -refreshToken")
     res.status(200).json({
         success: true,
         data: {
@@ -79,9 +80,22 @@ export const getUsers = catchAsync(async (req, res, next) => {
         }
     })
 });
+
 export const updateUser = catchAsync(async (req, res, next) => {
-    const { id } = req.params ;
-    const { name , email , password, birthDate, cin} = req.body ;
+    const { id } = req.params;
+    
     const user = await User.findById(id);
+    if(!user){
+        throw new AppError('User Not Found', 401);
+    }
+    user.updateFields(req.body)
+
+    res.status(200).json({
+        success: true,
+        message: "User updated successfully",
+        data: {
+            user,
+        },
+    });
 
 });

@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import mongoose from 'mongoose';
-import { register, login } from '../controllers/authController.js';
+import { register, login, refreshAccessToken } from '../controllers/authController.js';
 import { registerSchemaJoi, loginSchemaJoi } from '../validations/joiValidation.js';
 import validate from '../middlewares/validate.js';
-import multer from 'multer';
-const upload = multer();
+
 
 const router = Router();
 
@@ -29,13 +28,11 @@ router.get('/test-db', async (req, res) => {
   }
 });
 
-router.post('/login',  upload.none(), validate(loginSchemaJoi), login);
+router.post('/login', validate(loginSchemaJoi), login);
 
 router.post('/register', validate(registerSchemaJoi), register);
 
-router.post('/refresh', (req, res) => {
-  res.send('Refresh token route');
-});
+router.post('/refreshAccess', refreshAccessToken);
 
 router.post('/logout', (req, res) => {
   res.send('Logout route');

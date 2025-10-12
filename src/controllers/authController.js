@@ -38,7 +38,7 @@ export const register = catchAsync(async (req, res, next) => {
 
 export const login = catchAsync(async (req, res, next) => {
     console.log(req.body)
-    const { email , password } = req.body;
+    const { email, password } = req.body;
 
     // Check if user exists
     const existingUser = await User.findOne({ email });
@@ -69,16 +69,17 @@ export const login = catchAsync(async (req, res, next) => {
         status: existingUser.status,
         permissions: existingUser.permissions
     };
-    await redisClient.set(`user:${existingUser._id}`, JSON.stringify(userData), { EX: 900 });
+    await redisClient.set(`user:${existingUser._id}`, JSON.stringify(userData), { EX: 1800 });// 30 min
 
-    res.status(200).json({
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "Strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    }).status(200).json({
         success: true,
-        message: 'User logged in successfully',
-        data: {
-            accessToken,
-            refreshToken,
-            permissions: existingUser.permissions
-        }
+        accessToken,
+        permissions: existingUser.permissions
     });
 });
 
@@ -102,31 +103,40 @@ export const logout = catchAsync(async (req, res, next) => {
     });
 });
 
-export const refreshToken = catchAsync(async (req, res, next) => {
-    const { refreshToken } = req.body;
+export const refreshAccessToken = catchAsync(async (req, res, next) => {
+    const refreshToken = req.cookies?.refreshToken;
+
+    console.log(req.cookies)
     if (!refreshToken) {
-        throw new AppError('Refresh token is required', 400);
+        return next(new AppError('No refresh token provided !!', 401, 'NO_TOKEN'));
     }
     // Find user by refresh token
     const existingUser = await User.findOne({ refreshToken });
     if (!existingUser) {
-        throw new AppError('Invalid refresh token', 401);
+        throw new AppError('Invalid refresh token', 401, 'TOKEN_INVALID');
     }
     // verify the refresh token
     const isValid = verifyToken(refreshToken, "refresh");
     if (!isValid) {
         existingUser.refreshToken = null;
         await existingUser.save();
-        throw new AppError('Invalid or expired refresh token', 401);
+        throw new AppError('Invalid or expired refresh token', 401, 'TOKEN_INVALID');
     }
 
     // Generate new tokens
-    const newAccessToken = existingUser.generateAccessToken();
+    const newAccessToken = generateAccessToken(existingUser);
+     const userData = {
+        id: existingUser._id,
+        name: existingUser.name,
+        email: existingUser.email,
+        roleId: existingUser.roleId,
+        status: existingUser.status,
+        permissions: existingUser.permissions
+    };
+    await redisClient.set(`user:${existingUser._id}`, JSON.stringify(userData), { EX: 1800 });// 30 min
     res.status(200).json({
         success: true,
         message: 'Token refreshed successfully',
-        data: {
-            accessToken: newAccessToken,
-        }
+        accessToken: newAccessToken,
     });
 });

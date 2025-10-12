@@ -6,9 +6,12 @@ import { connectDB } from "../config/db.js";
 import morgan from "morgan";
 import fs from 'fs';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 dotenv.config();
 import redisClient from './config/redis.js';
 import { initRedis } from './config/redis.js';
+
+
 
 // insertion if the db empty
 import initDB from "./seeders/initDB.js";
@@ -21,9 +24,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ===== Middleware =====
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json());// pour accept application/json type
+app.use(express.urlencoded({ extended: true }));// pour accept application/x-www-form-urlencoded 
 app.use(cors());
+app.use(cookieParser());
+
 
 // ===== Morgan config =====
 // ( print all request / like a file )

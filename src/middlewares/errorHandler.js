@@ -3,8 +3,14 @@ export function errorHandler(err, req, res, next) {
 
   let status = err.statusCode || 500;
   let message = err.message || 'Internal Server Error';
+  // Prefer explicit code from AppError if provided
+  const code = err.code || (() => {
+    if (err.name === 'TokenExpiredError') return 'TOKEN_EXPIRED';
+    if (err.name === 'JsonWebTokenError') return 'TOKEN_INVALID';
+    return undefined;
+  })();
 
-  // 🔸 Erreurs MongoDB
+  // MongoDB validation
   if (err.name === 'ValidationError') {
     status = 400;
     message = Object.values(err.errors)
@@ -17,19 +23,21 @@ export function errorHandler(err, req, res, next) {
     message = `Invalid ${err.path}: ${err.value}`;
   }
 
-  // 🔸 JWT errors
-  if (err.name === 'JsonWebTokenError') {
+  // If error came from jsonwebtoken and no explicit code set above
+  if (!code && err.name === 'TokenExpiredError') {
+    // override message for consistency
+    message = 'Access token expired. Use refresh token to obtain a new access token.';
     status = 401;
-    message = 'Invalid or expired token';
   }
 
-  if (err.name === 'TokenExpiredError') {
+  if (!code && err.name === 'JsonWebTokenError') {
+    message = 'Invalid token. Please login again.';
     status = 401;
-    message = 'Token has expired';
   }
 
   res.status(status).json({
     success: false,
-    error: message,
+    error: code || err.code || 'SERVER_ERROR',
+    message,
   });
 }

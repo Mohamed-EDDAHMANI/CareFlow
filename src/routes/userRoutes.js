@@ -6,7 +6,7 @@ import { authorize, protect } from '../middlewares/authorize.js';
 
 const router = Router();
 
-router.post('/create', protect, authorize('create_user') ,validate(userSchemaJoi), createUser);
+router.post('/create', protect, authorize('create_user') ,  validate(userSchemaJoi), createUser);
 router.get('/', protect ,getUsers);
 router.get('/:id', protect, getUserById);
 router.put('/:id', protect, authorize('update_user') ,validate(userSchemaJoi), updateUser);
