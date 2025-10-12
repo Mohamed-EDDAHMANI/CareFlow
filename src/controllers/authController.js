@@ -15,7 +15,7 @@ export const register = catchAsync(async (req, res, next) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-        throw new AppError('Email already in use', 400);
+        throw new AppError('Email already in use', 400, 'MESSAGE_ERROR');
     }
 
     // Create new user
@@ -37,20 +37,20 @@ export const register = catchAsync(async (req, res, next) => {
 });
 
 export const login = catchAsync(async (req, res, next) => {
-    console.log(req.body)
+
     const { email, password } = req.body;
 
     // Check if user exists
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
-        throw new AppError('Invalid email or password !!', 401);
+        throw new AppError('Invalid email or password !!', 401 , 'MESSAGE_ERROR');
     }
 
     // Check password
     const isMatch = await existingUser.matchPassword(password);
     if (!isMatch) {
         console.log(isMatch)
-        throw new AppError('Invalid email or password !', 401);
+        throw new AppError('Invalid email or password !', 401, 'MESSAGE_ERROR');
     }
 
     // Generate tokens
@@ -86,13 +86,13 @@ export const login = catchAsync(async (req, res, next) => {
 export const logout = catchAsync(async (req, res, next) => {
     const { refreshToken } = req.body;
     if (!refreshToken) {
-        throw new AppError('Refresh token is required', 400);
+        throw new AppError('Refresh token is required', 400, 'NO_TOKEN');
     }
 
     // Find user by refresh token
     const existingUser = await User.findOne({ refreshToken });
     if (!existingUser) {
-        throw new AppError('Invalid refresh token', 401);
+        throw new AppError('Invalid refresh token', 401 , 'TOKEN_INVALID');
     }
     // Invalidate refresh token
     existingUser.refreshToken = null;
@@ -106,7 +106,6 @@ export const logout = catchAsync(async (req, res, next) => {
 export const refreshAccessToken = catchAsync(async (req, res, next) => {
     const refreshToken = req.cookies?.refreshToken;
 
-    console.log(req.cookies)
     if (!refreshToken) {
         return next(new AppError('No refresh token provided !!', 401, 'NO_TOKEN'));
     }
@@ -125,7 +124,7 @@ export const refreshAccessToken = catchAsync(async (req, res, next) => {
 
     // Generate new tokens
     const newAccessToken = generateAccessToken(existingUser);
-     const userData = {
+    const userData = {
         id: existingUser._id,
         name: existingUser.name,
         email: existingUser.email,
