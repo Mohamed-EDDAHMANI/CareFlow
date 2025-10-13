@@ -9,12 +9,17 @@ export const createUser = catchAsync(async (req, res, next) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-        throw new AppError('Email already in use', 400);
+        throw new AppError('Email already in use', 400 , 'VALIDATION_ERROR');
+    }
+
+    const existingUserByCin = await User.findOne({ cin });
+    if (existingUserByCin) {
+        throw new AppError('Cin already in use', 400 , 'VALIDATION_ERROR');
     }
 
     const role = await Role.findById(roleId);
     if (!role) {
-        throw new AppError('Invalid role ID', 400);
+        throw new AppError('Invalid role ID', 400 , 'VALIDATION_ERROR');
     }
 
     // Create new user
@@ -115,20 +120,20 @@ export const searchUsers = catchAsync(async (req, res, next) => {
     if (name && name.trim() !== "") {
         filter.name = { $regex: new RegExp(name, "i") };
     }
-    const roleDoc = await Role.findOne({ name: role });
-    if (!roleDoc) {
-        throw new AppError("Role not found", 404);
-    }
-    const roleId = roleDoc._id;
-
-    if (roleId) {
-        filter.roleId = roleId._id;
+    
+    if(role){
+        const roleDoc = await Role.findOne({ name: role });
+        if (!roleDoc) {
+            throw new AppError("Role not found", 404);
+        }
+        const roleId = roleDoc._id;
+    
+        if (roleId) {
+            filter.roleId = roleId._id;
+        }
     }
     console.log(filter, role)
-    // {
-    //     name: { '$regex': /Mohamed ALI/i },
-    //     roleId: new ObjectId('68ec0b9bbb69b3ab596c7c57')
-    // }
+    // name: { '$regex': /Mohamed ALI/i },
 
     // 🔹 Sort
     let sort = {};

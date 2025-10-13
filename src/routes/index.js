@@ -3,7 +3,7 @@ import { Router } from 'express';
 // ===== Import All Route Files =====
 import authRoutes from './authRoutes.js';
 import userRoutes from './userRoutes.js';
-// import roleRoutes from './roleRoutes.js';
+import permissionsRoutes from './permissionsRoutes.js';
 // import appointmentRoutes from './appointmentRoutes.js';
 // import medicalRecordRoutes from './medicalRecordRoutes.js';
 // import notificationRoutes from './notificationRoutes.js';
@@ -22,8 +22,8 @@ router.use('/auth', authRoutes);
 // // 👥 User Management (CRUD, suspend/activate, profile, search)
 router.use('/users', userRoutes);
 
-// // 🛡️ Role & Permissions Management
-// router.use('/roles', roleRoutes);
+// // 🛡️ Permissions Management
+router.use('/permissions', permissionsRoutes);
 
 // // 📅 Appointment Management (scheduling, availability, status updates)
 // router.use('/appointments', appointmentRoutes);

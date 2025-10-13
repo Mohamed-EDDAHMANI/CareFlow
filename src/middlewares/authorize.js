@@ -46,6 +46,9 @@ export const authorize = (requiredPermission) =>
     if (!requiredPermission) {
       return next();
     }
+    if(requiredPermission === 'administration'){
+      return next();
+    }
 
     const cached = await redisClient.get(`user:${userId}`);
     if (!cached) {

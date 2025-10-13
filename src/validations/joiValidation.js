@@ -24,3 +24,21 @@ export const userSchemaJoi = Joi.object({
   status: Joi.string().valid('active', 'suspended').default('active'),
   cin: Joi.string().required()
 })
+
+export const updatePermissionsSchema = Joi.object({
+  create_user: Joi.boolean().required(),
+  delete_user: Joi.boolean().required(),
+  update_user: Joi.boolean().required(),
+
+  create_appointment: Joi.boolean().required(),
+  update_appointment: Joi.boolean().required(),
+  cancel_appointment: Joi.boolean().required(),
+  view_appointment: Joi.boolean().required(),
+
+  create_medical_record: Joi.boolean().required(),
+  view_medical_record: Joi.boolean().required(),
+  update_medical_record: Joi.boolean().required(),
+
+  send_notification: Joi.boolean().required(),
+  manage_system: Joi.boolean().required(),
+});

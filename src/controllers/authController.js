@@ -1,9 +1,9 @@
 import AppError from '../utils/appError.js';
 import User from "../models/userModel.js";
 import catchAsync from '../utils/catchAsync.js';
+import { cacheUser , deleteCache } from '../utils/cacheUser.js';
 import { verifyToken, generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import Role from '../models/roleModel.js';
-import redisClient from '../config/redis.js';
 
 export const register = catchAsync(async (req, res, next) => {
     const { name, email, password, birthDate, status, cin } = req.body;
@@ -59,17 +59,7 @@ export const login = catchAsync(async (req, res, next) => {
     existingUser.refreshToken = refreshToken;
     await existingUser.save();
 
-    delete existingUser.password;
-    delete existingUser.refreshToken;
-    const userData = {
-        id: existingUser._id,
-        name: existingUser.name,
-        email: existingUser.email,
-        roleId: existingUser.roleId,
-        status: existingUser.status,
-        permissions: existingUser.permissions
-    };
-    await redisClient.set(`user:${existingUser._id}`, JSON.stringify(userData), { EX: 1800 });// 30 min
+    await cacheUser(existingUser);
 
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
@@ -97,6 +87,9 @@ export const logout = catchAsync(async (req, res, next) => {
     // Invalidate refresh token
     existingUser.refreshToken = null;
     await existingUser.save();
+
+    await deleteCache(existingUser);
+
     res.status(200).json({
         success: true,
         message: 'User logged out successfully'
@@ -111,6 +104,7 @@ export const refreshAccessToken = catchAsync(async (req, res, next) => {
     }
     // Find user by refresh token
     const existingUser = await User.findOne({ refreshToken });
+
     if (!existingUser) {
         throw new AppError('Invalid refresh token', 401, 'TOKEN_INVALID');
     }
@@ -124,15 +118,7 @@ export const refreshAccessToken = catchAsync(async (req, res, next) => {
 
     // Generate new tokens
     const newAccessToken = generateAccessToken(existingUser);
-    const userData = {
-        id: existingUser._id,
-        name: existingUser.name,
-        email: existingUser.email,
-        roleId: existingUser.roleId,
-        status: existingUser.status,
-        permissions: existingUser.permissions
-    };
-    await redisClient.set(`user:${existingUser._id}`, JSON.stringify(userData), { EX: 1800 });// 30 min
+    await cacheUser(existingUser);
     res.status(200).json({
         success: true,
         message: 'Token refreshed successfully',
