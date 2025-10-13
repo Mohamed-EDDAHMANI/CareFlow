@@ -1,5 +1,6 @@
 // utils/cacheUser.js
 import redisClient from '../config/redis.js';
+import AppError from './appError.js';
 
 export const cacheUser = async (user) => {
   if (!user) return;
@@ -18,6 +19,8 @@ export const cacheUser = async (user) => {
   });
 };
 
-export const deleteCache = async (user) => {
 
-}
+
+export const deleteCache = async (user) => {
+    await redisClient.del(`user:${user._id}`);
+};
