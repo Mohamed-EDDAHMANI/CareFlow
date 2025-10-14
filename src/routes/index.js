@@ -4,7 +4,7 @@ import { Router } from 'express';
 import authRoutes from './authRoutes.js';
 import userRoutes from './userRoutes.js';
 import permissionsRoutes from './permissionsRoutes.js';
-// import appointmentRoutes from './appointmentRoutes.js';
+import appointmentRoutes from './appointmentRoutes.js';
 // import medicalRecordRoutes from './medicalRecordRoutes.js';
 // import notificationRoutes from './notificationRoutes.js';
 // import systemRoutes from './systemRoutes.js';
@@ -26,7 +26,7 @@ router.use('/users', userRoutes);
 router.use('/permissions', permissionsRoutes);
 
 // // 📅 Appointment Management (scheduling, availability, status updates)
-// router.use('/appointments', appointmentRoutes);
+router.use('/appointments', appointmentRoutes);
 
 // // 🏥 Medical Records (patient history, actions, priority management)
 // router.use('/medical-records', medicalRecordRoutes);
