@@ -40,7 +40,7 @@ async function getDoctorsToCheck(user, doctoreChose) {
   if (!doctorRole) throw new AppError("Role 'doctore' not found!", 500, "SERVER_ERROR");
 
   const doctorUsers = await User.find({ roleId: doctorRole._id }, { _id: 1 });
-  return doctorUsers.map(doc => doc._id).sort(() => Math.random() - 0.5);
+  return doctorUsers.map(doc => doc._id);
 }
 
 // Fetch scheduling data (appointments, workingHours, holidays)
