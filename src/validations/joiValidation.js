@@ -23,7 +23,7 @@ export const userSchemaJoi = Joi.object({
   roleId: Joi.string().required(),
   status: Joi.string().valid('active', 'suspended').default('active'),
   cin: Joi.string().required()
-})
+});
 
 export const updatePermissionsSchema = Joi.object({
   create_user: Joi.boolean().required(),
@@ -41,4 +41,39 @@ export const updatePermissionsSchema = Joi.object({
 
   send_notification: Joi.boolean().required(),
   manage_system: Joi.boolean().required(),
+});
+
+// Appointment validation
+// Note: documents field handled by multer, not validated in Joi
+export const appointmentSchemaJoi = Joi.object({
+  patientId: Joi.string().required(),
+  doctoreChose: Joi.string().optional().allow(null, '', 0),
+  reason: Joi.string().required().min(3),
+  type: Joi.string().valid('consultation générale', 'suivi').default('consultation générale'),
+  weekOffset: Joi.number().integer().min(0).default(0)
+});
+
+// Medical Record validation
+// Note: documents field handled by multer, not validated in Joi
+export const medicalRecordSchemaJoi = Joi.object({
+  patientId: Joi.string().required(),
+  appointmentId: Joi.string().required(),
+  priority: Joi.string().valid('Normal', 'À suivre', 'Traitement nécessaire', 'Urgent').default('Normal'),
+  typeMedical: Joi.string().required().min(3),
+  description: Joi.string().optional().allow(''),
+  resultDate: Joi.date().optional()
+});
+
+// Medical Record Update validation
+export const updateMedicalRecordSchemaJoi = Joi.object({
+  priority: Joi.string().valid('Normal', 'À suivre', 'Traitement nécessaire', 'Urgent').optional(),
+  typeMedical: Joi.string().min(3).optional(),
+  description: Joi.string().optional().allow(''),
+  resultDate: Joi.date().optional()
+});
+
+// Medical Record Action validation
+export const medicalRecordActionSchemaJoi = Joi.object({
+  type: Joi.string().valid('treatment', 'scanner', 'analysis').required(),
+  description: Joi.string().required().min(3)
 });

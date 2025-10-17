@@ -5,7 +5,7 @@ import authRoutes from './authRoutes.js';
 import userRoutes from './userRoutes.js';
 import permissionsRoutes from './permissionsRoutes.js';
 import appointmentRoutes from './appointmentRoutes.js';
-// import medicalRecordRoutes from './medicalRecordRoutes.js';
+import medicalRecordRoutes from './medicalRecordRoutes.js';
 // import notificationRoutes from './notificationRoutes.js';
 // import systemRoutes from './systemRoutes.js';
 // import searchRoutes from './searchRoutes.js';
@@ -29,7 +29,7 @@ router.use('/permissions', permissionsRoutes);
 router.use('/appointments', appointmentRoutes);
 
 // // 🏥 Medical Records (patient history, actions, priority management)
-// router.use('/medical-records', medicalRecordRoutes);
+router.use('/medical-records', medicalRecordRoutes);
 
 // // 🔔 Notification Management (email/whatsapp, read status)
 // router.use('/notifications', notificationRoutes);

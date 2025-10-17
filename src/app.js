@@ -29,6 +29,8 @@ app.use(express.urlencoded({ extended: true }));// pour accept application/x-www
 app.use(cors());
 app.use(cookieParser());
 
+// Serve uploaded files as static content
+app.use('/uploads', express.static('uploads'));
 
 // ===== Morgan config =====
 // ( print all request / like a file )

@@ -13,8 +13,8 @@ const medicalRecordSchema = new mongoose.Schema({
   priority: { type: String, enum: ["Normal", "À suivre", "Traitement nécessaire", "Urgent"], default: "Normal" },
   typeMedical: { type: String, required: true },
   description: { type: String },
-  document: { type: String }, // optional main document
-  actions: [actionSchema], // جميع الأفعال المتعلقة بالسجل
+  document: [{ type: String }], // optional main document
+  actions: [actionSchema],
   resultDate: { type: Date, default: Date.now }
 }, { timestamps: true });
 

@@ -142,7 +142,7 @@ function findBestDoctorByEarliestSlot(doctors, appointments, workingHours, holid
    MAIN: handleCreateAppointment
 ---------------------------*/
 
-export const handleCreateAppointment = async (user, patientId, doctoreChose, { reason, type, weekOffset }) => {
+export const handleCreateAppointment = async (user, patientId, doctoreChose, { reason, type, weekOffset }, documents = []) => {
   // 1. Which doctors to check
   const doctors = await getDoctorsToCheck(user, doctoreChose);
 
@@ -156,7 +156,7 @@ export const handleCreateAppointment = async (user, patientId, doctoreChose, { r
   const nextSlot = findBestDoctorByEarliestSlot(doctors, appointments, workingHours, holidays, startSearch, endSearch);
   if (!nextSlot) throw new AppError("No available appointment slot found in this interval", 400, "NO_SLOT");
 
-  // 5. Create appointment
+  // 5. Create appointment with optional documents
   const end = new Date(nextSlot.start.getTime() + 60 * 60000); // 1-hour slot
   const appointment = await Appointment.create({
     patientId,
@@ -165,6 +165,7 @@ export const handleCreateAppointment = async (user, patientId, doctoreChose, { r
     end,
     reason,
     type,
+    document: documents, // Can be empty array or array of file paths
     createdBy: user._id,
     status: 'scheduled'
   });
