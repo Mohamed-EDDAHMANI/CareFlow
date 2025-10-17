@@ -53,6 +53,11 @@ export const appointmentSchemaJoi = Joi.object({
   weekOffset: Joi.number().integer().min(0).default(0)
 });
 
+// Appointment Status Update validation
+export const updateAppointmentStatusSchemaJoi = Joi.object({
+  status: Joi.string().valid('scheduled', 'completed', 'cancelled').required()
+});
+
 // Medical Record validation
 // Note: documents field handled by multer, not validated in Joi
 export const medicalRecordSchemaJoi = Joi.object({

@@ -235,3 +235,86 @@ export const searchAppointments = catchAsync(async (req, res, next) => {
         data
     });
 });
+
+/**
+ * Update appointment status
+ * Allows doctors to change appointment status (scheduled, completed, cancelled)
+ */
+export const updateAppointmentStatus = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    const validStatuses = ['scheduled', 'completed', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+        return next(new AppError(
+            `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+            400,
+            'INVALID_STATUS'
+        ));
+    }
+
+    // Find appointment
+    const appointment = await Appointment.findById(id)
+        .populate('patientId', 'name email cin')
+        .populate('doctorId', 'name email cin');
+
+    if (!appointment) {
+        return next(new AppError('Appointment not found', 404, 'NOT_FOUND'));
+    }
+
+    // Check if user is the assigned doctor or has admin rights
+    const userRole = await (await import('../models/roleModel.js')).default.findById(req.user.roleId);
+    const isAssignedDoctor = appointment.doctorId._id.toString() === req.user._id.toString();
+    const hasAdminRights = userRole?.name === 'admin' || req.user.permissions?.administration;
+
+    if (!isAssignedDoctor && !hasAdminRights) {
+        return next(new AppError(
+            'You are not authorized to update this appointment. Only the assigned doctor or admin can update it.',
+            403,
+            'FORBIDDEN'
+        ));
+    }
+
+    // Prevent changing status of cancelled appointments
+    if (appointment.status === 'cancelled' && status !== 'cancelled') {
+        return next(new AppError(
+            'Cannot change status of a cancelled appointment',
+            400,
+            'INVALID_OPERATION'
+        ));
+    }
+
+    // Prevent completing appointments that haven't occurred yet
+    if (status === 'completed' && new Date() < appointment.start) {
+        return next(new AppError(
+            'Cannot mark a future appointment as completed',
+            400,
+            'INVALID_OPERATION'
+        ));
+    }
+
+    // Update status
+    const oldStatus = appointment.status;
+    appointment.status = status;
+    await appointment.save();
+
+    console.log(`✅ Appointment ${id} status changed from "${oldStatus}" to "${status}" by ${req.user.name}`);
+
+    res.status(200).json({
+        success: true,
+        message: `Appointment status updated from "${oldStatus}" to "${status}"`,
+        data: {
+            id: appointment._id,
+            patientId: appointment.patientId,
+            doctorId: appointment.doctorId,
+            start: appointment.start,
+            end: appointment.end,
+            reason: appointment.reason,
+            type: appointment.type,
+            status: appointment.status,
+            document: appointment.document,
+            updatedAt: appointment.updatedAt
+        }
+    });
+});

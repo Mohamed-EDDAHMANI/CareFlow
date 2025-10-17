@@ -12,6 +12,22 @@ const appointmentSchema = new mongoose.Schema({
   status: { type: String, enum: ["scheduled", "completed", "cancelled"], default: "scheduled" }
 }, { timestamps: true });
 
+// 🔒 PREVENT DOUBLE BOOKING: Unique index ensures no overlapping appointments for same doctor at same time
+// Only enforced for scheduled appointments (completed/cancelled can overlap)
+appointmentSchema.index(
+  { doctorId: 1, start: 1, status: 1 },
+  { 
+    unique: true,
+    partialFilterExpression: { status: 'scheduled' },
+    name: 'unique_doctor_scheduled_slot'
+  }
+);
+
+// Additional index for efficient querying
+appointmentSchema.index({ patientId: 1, start: 1 });
+appointmentSchema.index({ doctorId: 1, start: 1, end: 1 });
+appointmentSchema.index({ status: 1, start: 1 });
+
 // Mark appointment as completed
 appointmentSchema.methods.markCompleted = async function() {
   this.status = "completed";

@@ -22,6 +22,8 @@ const userSchema = new mongoose.Schema({
 
     create_medical_record: { type: Boolean, default: false },
     view_medical_record: { type: Boolean, default: false },
+    view_patient_history: { type: Boolean, default: false },
+    
     update_medical_record: { type: Boolean, default: false },
 
     send_notification: { type: Boolean, default: false },

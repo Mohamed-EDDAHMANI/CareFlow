@@ -4,6 +4,7 @@ import Appointment from "../models/appointmentModel.js";
 import WorkingHour from "../models/WorkingHourModel.js";
 import Holiday from "../models/HolidayModel.js";
 import AppError from "../utils/appError.js";
+import mongoose from 'mongoose';
 
 /* --------------------------
    HELPERS
@@ -140,35 +141,96 @@ function findBestDoctorByEarliestSlot(doctors, appointments, workingHours, holid
 
 /* --------------------------
    MAIN: handleCreateAppointment
+   Uses MongoDB transactions to prevent race conditions
 ---------------------------*/
 
 export const handleCreateAppointment = async (user, patientId, doctoreChose, { reason, type, weekOffset }, documents = []) => {
-  // 1. Which doctors to check
-  const doctors = await getDoctorsToCheck(user, doctoreChose);
+  // Start a MongoDB session for transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  // 2. Interval
-  const [startSearch, endSearch] = createInterval(weekOffset);
+  try {
+    // 1. Which doctors to check
+    const doctors = await getDoctorsToCheck(user, doctoreChose);
 
-  // 3. Scheduling data
-  const { appointments, workingHours, holidays } = await getSchedulingData(startSearch, endSearch);
+    // 2. Interval
+    const [startSearch, endSearch] = createInterval(weekOffset);
 
-  // 4. Best slot across all doctors (earliest one)
-  const nextSlot = findBestDoctorByEarliestSlot(doctors, appointments, workingHours, holidays, startSearch, endSearch);
-  if (!nextSlot) throw new AppError("No available appointment slot found in this interval", 400, "NO_SLOT");
+    // 3. Scheduling data (fetch within transaction for consistency)
+    const { appointments, workingHours, holidays } = await getSchedulingData(startSearch, endSearch);
 
-  // 5. Create appointment with optional documents
-  const end = new Date(nextSlot.start.getTime() + 60 * 60000); // 1-hour slot
-  const appointment = await Appointment.create({
-    patientId,
-    doctorId: nextSlot.doctorId,
-    start: nextSlot.start,
-    end,
-    reason,
-    type,
-    document: documents, // Can be empty array or array of file paths
-    createdBy: user._id,
-    status: 'scheduled'
-  });
+    // 4. Best slot across all doctors (earliest one)
+    const nextSlot = findBestDoctorByEarliestSlot(doctors, appointments, workingHours, holidays, startSearch, endSearch);
+    if (!nextSlot) {
+      await session.abortTransaction();
+      throw new AppError("No available appointment slot found in this interval", 400, "NO_SLOT");
+    }
 
-  return { appointment, nextSlot };
+    // 5. CRITICAL: Double-check slot is still available before creating
+    // This prevents race condition where another request took the slot between our check and creation
+    const end = new Date(nextSlot.start.getTime() + 60 * 60000); // 1-hour slot
+    
+    const conflictCheck = await Appointment.findOne({
+      doctorId: nextSlot.doctorId,
+      status: 'scheduled',
+      $or: [
+        {
+          // Check if new appointment overlaps with any existing appointment
+          start: { $lt: end },
+          end: { $gt: nextSlot.start }
+        }
+      ]
+    }).session(session); // Use session to ensure read happens within transaction
+
+    if (conflictCheck) {
+      // Slot was taken between our initial check and now!
+      await session.abortTransaction();
+      throw new AppError(
+        "This time slot was just booked by another user. Please try again to get the next available slot.",
+        409,
+        "SLOT_CONFLICT"
+      );
+    }
+
+    // 6. Create appointment within transaction with optional documents
+    const appointmentData = {
+      patientId,
+      doctorId: nextSlot.doctorId,
+      start: nextSlot.start,
+      end,
+      reason,
+      type,
+      document: documents, // Can be empty array or array of file paths
+      createdBy: user._id,
+      status: 'scheduled'
+    };
+
+    // Create returns an array when using session
+    const [appointment] = await Appointment.create([appointmentData], { session });
+
+    // 7. Commit the transaction
+    await session.commitTransaction();
+
+    console.log(`✅ Appointment created successfully: ${appointment._id} for doctor ${nextSlot.doctorId} at ${nextSlot.start}`);
+
+    return { appointment, nextSlot };
+
+  } catch (error) {
+    // Rollback transaction on any error
+    await session.abortTransaction();
+    
+    // Handle duplicate key error from unique index
+    if (error.code === 11000) {
+      throw new AppError(
+        "This appointment slot is no longer available. Please select another time.",
+        409,
+        "DUPLICATE_SLOT"
+      );
+    }
+    
+    throw error;
+  } finally {
+    // Always end the session
+    session.endSession();
+  }
 };

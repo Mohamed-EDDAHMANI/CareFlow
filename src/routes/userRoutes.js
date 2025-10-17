@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createUser , deleteUser, getUserById, getUsers, updateUser, searchUsers } from '../controllers/userController.js';
+import { createUser , deleteUser, getUserById, getUsers, updateUser, searchUsers, getPatientHistory } from '../controllers/userController.js';
 import { userSchemaJoi } from '../validations/joiValidation.js';
 import validate from '../middlewares/validate.js';
 import { authorize, protect } from '../middlewares/authorize.js';
@@ -46,6 +46,24 @@ router.get('/', protect ,getUsers);
  * }
  */
 router.get('/search', protect , searchUsers);
+
+/**
+ * @route   GET /api/users/history/:patientId
+ * @desc    Get complete patient history (appointments + medical records combined and sorted)
+ * @access  Private (requires: view_medical_record or view_appointment permission)
+ * @params  {
+ *   patientId: string (required) - Patient's user ID
+ * }
+ * @query   {
+ *   page: number (optional) - Page number (default: 1),
+ *   limit: number (optional) - Items per page (default: 20),
+ *   sortOrder: string (optional) - "asc" | "desc" (default: desc),
+ *   type: string (optional) - "appointment" | "medical_record" | "all" (default: all),
+ *   from: date (optional) - Start date filter (ISO format),
+ *   to: date (optional) - End date filter (ISO format)
+ * }
+ */
+router.get('/history/:patientId', protect, getPatientHistory);
 
 /**
  * @route   GET /api/users/:id

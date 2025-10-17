@@ -4,10 +4,13 @@ import {
     getAllAppointments, 
     getDoctorAppointments,
     getAppointmentById, 
-    searchAppointments 
+    searchAppointments,
+    updateAppointmentStatus
 } from '../controllers/appoitmentController.js'
 import { protect, authorize } from '../middlewares/authorize.js';
 import { uploadAppointmentDocuments } from '../middlewares/uploadAppointment.js';
+import validate from '../middlewares/validate.js';
+import { updateAppointmentStatusSchemaJoi } from '../validations/joiValidation.js';
 
 const router = Router();
 
@@ -86,5 +89,18 @@ router.get('/doctor/:doctorId', protect, authorize('administration'), getDoctorA
  * }
  */
 router.get('/:id', protect, authorize('administration'), getAppointmentById);
+
+/**
+ * @route   PATCH /api/appointments/:id/status
+ * @desc    Update appointment status (for doctors and admins)
+ * @access  Private (assigned doctor or admin only)
+ * @params  {
+ *   id: string (required) - Appointment ID
+ * }
+ * @body    {
+ *   status: string (required) - "scheduled" | "completed" | "cancelled"
+ * }
+ */
+router.patch('/:id/status', protect, validate(updateAppointmentStatusSchemaJoi), updateAppointmentStatus);
 
 export default router;
