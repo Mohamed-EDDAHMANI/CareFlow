@@ -82,3 +82,40 @@ export const medicalRecordActionSchemaJoi = Joi.object({
   type: Joi.string().valid('treatment', 'scanner', 'analysis').required(),
   description: Joi.string().required().min(3)
 });
+
+// Holiday validation
+export const holidaySchemaJoi = Joi.object({
+  name: Joi.string().required().min(3).max(100),
+  date: Joi.date().required(),
+  description: Joi.string().optional().allow(''),
+  active: Joi.boolean().optional()
+});
+
+// Holiday Update validation
+export const updateHolidaySchemaJoi = Joi.object({
+  name: Joi.string().min(3).max(100).optional(),
+  date: Joi.date().optional(),
+  description: Joi.string().optional().allow(''),
+  active: Joi.boolean().optional()
+});
+
+// Working Hour validation
+export const workingHourSchemaJoi = Joi.object({
+  day: Joi.string().valid('lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche').required(),
+  start: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required()
+    .messages({ 'string.pattern.base': 'Start time must be in HH:MM format (24-hour)' }),
+  end: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required()
+    .messages({ 'string.pattern.base': 'End time must be in HH:MM format (24-hour)' }),
+  active: Joi.boolean().optional()
+});
+
+// Working Hour Update validation
+export const updateWorkingHourSchemaJoi = Joi.object({
+  day: Joi.string().valid('lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche').optional(),
+  start: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).optional()
+    .messages({ 'string.pattern.base': 'Start time must be in HH:MM format (24-hour)' }),
+  end: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).optional()
+    .messages({ 'string.pattern.base': 'End time must be in HH:MM format (24-hour)' }),
+  active: Joi.boolean().optional()
+});
+
