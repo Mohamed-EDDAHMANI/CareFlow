@@ -219,26 +219,48 @@ curl -X POST http://localhost:3000/api/appointments/create/PATIENT_ID_2 \
 
 ---
 
-## 🔧 MongoDB Replica Set Requirement
+## 🔧 Automatic MongoDB Detection
 
-**IMPORTANT**: MongoDB transactions require a **replica set**.
+**GOOD NEWS**: The system now automatically detects your MongoDB setup!
 
-### Check if you're using replica set:
+### How It Works
+
+The system automatically checks if MongoDB is running as a replica set:
+
 ```javascript
-const admin = mongoose.connection.db.admin();
-const status = await admin.replSetGetStatus();
-console.log(status);
+// On first appointment creation, system checks MongoDB configuration
+if (replicaSet detected) {
+  ✅ Use transactions (maximum protection)
+  Console: "✅ MongoDB replica set detected - using transactions"
+} else {
+  ✅ Use unique index only (still provides protection)
+  Console: "⚠️  MongoDB standalone mode - using unique index protection only"
+}
 ```
 
-### If using single MongoDB instance:
-You can initialize a replica set:
+### Both Modes Are Safe
 
+| Mode | Protection Level | Use Case |
+|------|------------------|----------|
+| **Replica Set + Transactions** | 🔒🔒🔒 Maximum | Production, high traffic |
+| **Standalone + Unique Index** | 🔒🔒 Good | Development, low traffic |
+
+Both prevent double booking - the difference is in how conflicts are detected.
+
+### Setting Up Replica Set (Optional)
+
+If you want maximum protection with transactions, initialize MongoDB as replica set:
+
+#### Option 1: Using MongoDB Shell
 ```bash
-# In MongoDB shell
+# Connect to MongoDB
+mongosh
+
+# Initialize replica set
 rs.initiate()
 ```
 
-Or in your `docker-compose.yml`:
+#### Option 2: Docker Compose
 ```yaml
 services:
   mongodb:
@@ -248,39 +270,19 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+
+# After starting, initialize replica set:
+# docker exec -it <container_name> mongosh
+# rs.initiate()
 ```
 
-### Alternative: If you can't use replica set
-Remove the transaction code but keep the unique index (Layer 1 only):
+#### Option 3: Keep Standalone (Default)
+No changes needed! The system works perfectly with standalone MongoDB.
 
-```javascript
-// Simplified version without transactions
-export const handleCreateAppointment = async (...) => {
-  const doctors = await getDoctorsToCheck(user, doctoreChose);
-  const [startSearch, endSearch] = createInterval(weekOffset);
-  const { appointments, workingHours, holidays } = await getSchedulingData(startSearch, endSearch);
-  
-  const nextSlot = findBestDoctorByEarliestSlot(...);
-  if (!nextSlot) throw new AppError("No slot", 400, "NO_SLOT");
-  
-  try {
-    const end = new Date(nextSlot.start.getTime() + 60 * 60000);
-    const appointment = await Appointment.create({
-      patientId, doctorId: nextSlot.doctorId,
-      start: nextSlot.start, end, reason, type,
-      document: documents, createdBy: user._id, status: 'scheduled'
-    });
-    return { appointment, nextSlot };
-  } catch (error) {
-    if (error.code === 11000) {
-      throw new AppError("Slot taken", 409, "DUPLICATE_SLOT");
-    }
-    throw error;
-  }
-};
-```
-
-The unique index alone provides good protection, but transactions provide better guarantees.
+The unique index provides database-level protection against duplicates.
 
 ---
 

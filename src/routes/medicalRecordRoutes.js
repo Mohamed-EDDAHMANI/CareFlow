@@ -35,7 +35,7 @@ const router = Router();
  * }
  */
 router.post(
-    '/',
+    '/create',
     protect,
     authorize('create_medical_record'),
     uploadMedicalDocuments,
@@ -67,7 +67,7 @@ router.get(
 );
 
 /**
- * @route   GET /api/medical-records/all
+ * @route   GET /api/medical-records/getAll
  * @desc    Get all medical records with optional filters
  * @access  Private (requires: view_medical_record permission)
  * @query   {
@@ -83,7 +83,7 @@ router.get(
  * }
  */
 router.get(
-    '/all',
+    '/getAll',
     protect,
     authorize('view_medical_record'),
     getAllMedicalRecords
