@@ -11,6 +11,7 @@ export const cacheUser = async (user) => {
     email: user.email,
     roleId: user.roleId,
     status: user.status,
+    role: user.roleId.name,
     permissions: user.permissions
   };
 

@@ -41,7 +41,7 @@ export const login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
 
     // Check if user exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email }).populate('roleId', 'name');
     if (!existingUser) {
         throw new AppError('Invalid email or password !!', 401 , 'MESSAGE_ERROR');
     }

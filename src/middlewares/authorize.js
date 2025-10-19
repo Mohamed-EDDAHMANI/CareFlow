@@ -46,17 +46,23 @@ export const authorize = (requiredPermission) =>
     if (!requiredPermission) {
       return next();
     }
-    if(requiredPermission === 'administration'){
-      return next();
-    }
-
+    
     const cached = await redisClient.get(`user:${userId}`);
     if (!cached) {
       return next(new AppError('Authorization failed', 403, 'AUTHORIZATION_FAILED'));
     }
-
+    
     const user = JSON.parse(cached);
     const hasPermission = user.permissions && user.permissions[requiredPermission];
+
+    if (requiredPermission === 'administration') {
+      if(user.role === 'admin'){
+        return next();
+      }else{
+        return next(new AppError('You do not have permission to perform this action', 403, 'FORBIDDEN'));
+      }
+
+    }
 
     if (!hasPermission) {
       return next(new AppError('You do not have permission to perform this action', 403, 'FORBIDDEN'));

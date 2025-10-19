@@ -36,7 +36,7 @@ const router = Router();
  *   month: number (optional) - Filter by month (1-12, requires year)
  * }
  */
-router.get('/holidays', protect, getAllHolidays);
+router.get('/holidays', protect , authorize("administration") , getAllHolidays);
 
 /**
  * @route   GET /api/system/holidays/:id
@@ -46,7 +46,7 @@ router.get('/holidays', protect, getAllHolidays);
  *   id: string (required) - Holiday ID
  * }
  */
-router.get('/holidays/:id', protect, getHolidayById);
+router.get('/holidays/:id', protect , authorize("administration") , getHolidayById);
 
 /**
  * @route   POST /api/system/holidays
@@ -130,7 +130,7 @@ router.delete(
  *   day: string (optional) - Filter by day (lundi, mardi, etc.)
  * }
  */
-router.get('/working-hours', protect, getAllWorkingHours);
+router.get('/working-hours', protect, authorize("administration"), getAllWorkingHours);
 
 /**
  * @route   GET /api/system/working-hours/:id
@@ -140,7 +140,7 @@ router.get('/working-hours', protect, getAllWorkingHours);
  *   id: string (required) - Working hour ID
  * }
  */
-router.get('/working-hours/:id', protect, getWorkingHourById);
+router.get('/working-hours/:id', protect, authorize("administration") , getWorkingHourById);
 
 /**
  * @route   POST /api/system/working-hours
