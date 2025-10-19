@@ -7,8 +7,20 @@ export const createAppointment = catchAsync(async (req, res, next) => {
     const { patientId } = req.params;
     const { reason, type, weekOffset = 0, doctoreChose = 0 } = req.body;
 
+    // Log request details
+    console.log('📋 Create appointment request:');
+    console.log('   Patient ID:', patientId);
+    console.log('   Reason:', reason);
+    console.log('   Type:', type);
+    console.log('   Files received:', req.files?.length || 0);
+
     // Handle uploaded documents (optional)
-    const documents = req.files ? req.files.map(file => file.path) : [];
+    const documents = req.files ? req.files.map(file => {
+        console.log(`   📎 Processing file: ${file.filename} → ${file.path}`);
+        return file.path;
+    }) : [];
+
+    console.log('   Total document paths:', documents.length);
 
     // Call service with documents
     const result = await handleCreateAppointment(req.user, patientId, doctoreChose, { reason, type, weekOffset }, documents);

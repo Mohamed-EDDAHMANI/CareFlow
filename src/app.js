@@ -8,7 +8,6 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 dotenv.config();
-import redisClient from './config/redis.js';
 import { initRedis } from './config/redis.js';
 
 
@@ -31,6 +30,15 @@ app.use(cookieParser());
 
 // Serve uploaded files as static content
 app.use('/uploads', express.static('uploads'));
+
+// ===== Request Logger (before morgan) =====
+app.use((req, res, next) => {
+    console.log(`🌐 ${req.method} ${req.path}`);
+    if (req.files) {
+        console.log(`   📎 Files: ${req.files.length}`);
+    }
+    next();
+});
 
 // ===== Morgan config =====
 // ( print all request / like a file )

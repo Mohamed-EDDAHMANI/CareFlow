@@ -103,7 +103,7 @@ export const refreshAccessToken = catchAsync(async (req, res, next) => {
         return next(new AppError('No refresh token provided !!', 401, 'NO_TOKEN'));
     }
     // Find user by refresh token
-    const existingUser = await User.findOne({ refreshToken });
+    const existingUser = await User.findOne({ refreshToken }).populate('roleId' ,'name');
 
     if (!existingUser) {
         throw new AppError('Invalid refresh token', 401, 'TOKEN_INVALID');
