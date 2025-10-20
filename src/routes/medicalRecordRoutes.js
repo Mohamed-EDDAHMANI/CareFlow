@@ -10,7 +10,7 @@ import {
     searchMedicalRecords
 } from '../controllers/medicalRecordController.js';
 import { protect, authorize } from '../middlewares/authorize.js';
-import { uploadMedicalDocuments, uploadSingleMedicalDocument } from '../middlewares/uploadMedicalRecord.js';
+import { uploadFiles } from '../middlewares/uploadFiles.js';
 import validate from '../middlewares/validate.js';
 import {
     medicalRecordSchemaJoi,
@@ -38,7 +38,7 @@ router.post(
     '/create',
     protect,
     authorize('create_medical_record'),
-    uploadMedicalDocuments,
+    uploadFiles,
     validate(medicalRecordSchemaJoi),
     createMedicalRecord
 );
@@ -131,7 +131,7 @@ router.post(
     '/:id/action',
     protect,
     authorize('update_medical_record'),
-    uploadSingleMedicalDocument,
+    // uploadSingleMedicalDocument,
     validate(medicalRecordActionSchemaJoi),
     addAction
 );
@@ -170,7 +170,7 @@ router.put(
     '/:id',
     protect,
     authorize('update_medical_record'),
-    uploadMedicalDocuments,
+    // uploadMedicalDocuments,
     validate(updateMedicalRecordSchemaJoi),
     updateMedicalRecord
 );

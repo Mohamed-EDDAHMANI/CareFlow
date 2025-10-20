@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import fileSchema from "./fileModel.js";
 
 const appointmentSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -8,7 +9,7 @@ const appointmentSchema = new mongoose.Schema({
   start: { type: Date, required: true },
   end: { type: Date, required: true },
   reason: { type: String },
-  document: [{ type: String }], // documents for suivi
+  document: [fileSchema], // documents for suivi
   status: { type: String, enum: ["scheduled", "completed", "cancelled"], default: "scheduled" }
 }, { timestamps: true });
 

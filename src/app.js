@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 dotenv.config();
 import { initRedis } from './config/redis.js';
+import { s3, initMinio }  from './config/s3Config.js';
 
 
 
@@ -76,6 +77,9 @@ connectDB()
 
     // insertion of db
     await initDB();
+
+    // create bucket
+    await initMinio();
 
     app.listen(PORT, () =>
       console.log(`✅ Server running on port ${PORT}`)

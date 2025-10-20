@@ -1,0 +1,1350 @@
+{
+	"info": {
+		"_postman_id": "careflow-api-collection",
+		"name": "CareFlow API Collection",
+		"description": "Complete API collection for CareFlow medical management system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "careflow-v1"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "patientId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "doctorId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "appointmentId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "medicalRecordId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "roleId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Test Database Connection",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Database connected\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/test-db",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "test-db"]
+						},
+						"description": "Test database connection and list all collections"
+					},
+					"response": []
+				},
+				{
+					"name": "Register New Patient",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.accessToken);",
+									"    pm.collectionVariables.set(\"refreshToken\", jsonData.refreshToken);",
+									"    pm.collectionVariables.set(\"userId\", jsonData.data.user._id);",
+									"    pm.collectionVariables.set(\"patientId\", jsonData.data.user._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"birthDate\": \"1990-05-15\",\n  \"cin\": \"AB123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register a new patient user"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.accessToken);",
+									"    pm.collectionVariables.set(\"refreshToken\", jsonData.refreshToken);",
+									"    pm.collectionVariables.set(\"userId\", jsonData.data.user._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@careflow.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Authenticate user and get access/refresh tokens"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.accessToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refreshAccess",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "refreshAccess"]
+						},
+						"description": "Refresh access token using refresh token"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						},
+						"description": "Logout user (placeholder)"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for login, register, token refresh"
+		},
+		{
+			"name": "👥 User Management",
+			"item": [
+				{
+					"name": "Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"userId\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"doctor@careflow.com\",\n  \"name\": \"Dr. Smith\",\n  \"password\": \"doctor123\",\n  \"birthDate\": \"1985-03-20\",\n  \"roleId\": \"{{roleId}}\",\n  \"cin\": \"CD789012\",\n  \"status\": \"active\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "create"]
+						},
+						"description": "Create a new user (admin, doctor, secretary, or patient)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "role",
+									"value": "doctor",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "active",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all users with pagination and optional filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/search?q=john",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "john"
+								},
+								{
+									"key": "role",
+									"value": "patient",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "active",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Search users by name, email, or CIN"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Patient History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/history/{{patientId}}?page=1&limit=20&type=all&sortOrder=desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "history", "{{patientId}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "type",
+									"value": "all",
+									"description": "appointment | medical_record | all"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								},
+								{
+									"key": "from",
+									"value": "2024-01-01",
+									"disabled": true
+								},
+								{
+									"key": "to",
+									"value": "2024-12-31",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get complete patient history (appointments + medical records)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "{{userId}}"]
+						},
+						"description": "Get a single user by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"updated@careflow.com\",\n  \"name\": \"Updated Name\",\n  \"password\": \"newpassword123\",\n  \"birthDate\": \"1990-05-15\",\n  \"roleId\": \"{{roleId}}\",\n  \"cin\": \"AB123456\",\n  \"status\": \"active\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "{{userId}}"]
+						},
+						"description": "Update user information"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "{{userId}}"]
+						},
+						"description": "Delete a user"
+					},
+					"response": []
+				}
+			],
+			"description": "User CRUD operations and management"
+		},
+		{
+			"name": "🛡️ Permissions",
+			"item": [
+				{
+					"name": "Update Role Permissions",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"create_user\": true,\n  \"delete_user\": true,\n  \"update_user\": true,\n  \"create_appointment\": true,\n  \"update_appointment\": true,\n  \"cancel_appointment\": true,\n  \"view_appointment\": true,\n  \"create_medical_record\": true,\n  \"view_medical_record\": true,\n  \"update_medical_record\": true,\n  \"send_notification\": true,\n  \"manage_system\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/permissions/update/{{roleId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["permissions", "update", "{{roleId}}"]
+						},
+						"description": "Update permissions for a specific role"
+					},
+					"response": []
+				}
+			],
+			"description": "Role permissions management"
+		},
+		{
+			"name": "📅 Appointments",
+			"item": [
+				{
+					"name": "Create Appointment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"appointmentId\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "reason",
+									"value": "Regular checkup",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "consultation générale",
+									"type": "text"
+								},
+								{
+									"key": "weekOffset",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "doctoreChose",
+									"value": "{{doctorId}}",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/appointments/create/{{patientId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["appointments", "create", "{{patientId}}"]
+						},
+						"description": "Create a new appointment with optional document uploads"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Appointments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/appointments/search?q=checkup&page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["appointments", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "checkup"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "status",
+									"value": "scheduled",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "consultation générale",
+									"disabled": true
+								},
+								{
+									"key": "from",
+									"value": "2024-01-01",
+									"disabled": true
+								},
+								{
+									"key": "to",
+									"value": "2024-12-31",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Search appointments by patient name, doctor name, or reason"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Appointments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/appointments/all?page=1&limit=20&sort=start&order=asc",
+							"host": ["{{baseUrl}}"],
+							"path": ["appointments", "all"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "status",
+									"value": "scheduled",
+									"disabled": true
+								},
+								{
+									"key": "from",
+									"value": "2024-01-01",
+									"disabled": true
+								},
+								{
+									"key": "to",
+									"value": "2024-12-31",
+									"disabled": true
+								},
+								{
+									"key": "sort",
+									"value": "start"
+								},
+								{
+									"key": "order",
+									"value": "asc"
+								}
+							]
+						},
+						"description": "Get all appointments with pagination and filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Doctor Appointments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/appointments/doctor/{{doctorId}}?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["appointments", "doctor", "{{doctorId}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "status",
+									"value": "scheduled",
+									"disabled": true
+								},
+								{
+									"key": "from",
+									"value": "2024-01-01",
+									"disabled": true
+								},
+								{
+									"key": "to",
+									"value": "2024-12-31",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all appointments for a specific doctor"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Appointment by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/appointments/{{appointmentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["appointments", "{{appointmentId}}"]
+						},
+						"description": "Get a single appointment by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Appointment Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"completed\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/appointments/{{appointmentId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["appointments", "{{appointmentId}}", "status"]
+						},
+						"description": "Update appointment status (scheduled, completed, cancelled)"
+					},
+					"response": []
+				}
+			],
+			"description": "Appointment scheduling and management"
+		},
+		{
+			"name": "🏥 Medical Records",
+			"item": [
+				{
+					"name": "Create Medical Record",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"medicalRecordId\", jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "patientId",
+									"value": "{{patientId}}",
+									"type": "text"
+								},
+								{
+									"key": "appointmentId",
+									"value": "{{appointmentId}}",
+									"type": "text"
+								},
+								{
+									"key": "priority",
+									"value": "Normal",
+									"type": "text"
+								},
+								{
+									"key": "typeMedical",
+									"value": "General Consultation",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Patient shows normal vital signs",
+									"type": "text"
+								},
+								{
+									"key": "resultDate",
+									"value": "2024-10-20",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/medical-records/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["medical-records", "create"]
+						},
+						"description": "Create a new medical record with optional document uploads"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Medical Records",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/medical-records/search?q=consultation&page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["medical-records", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "consultation"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "priority",
+									"value": "Normal",
+									"disabled": true
+								},
+								{
+									"key": "typeMedical",
+									"value": "General",
+									"disabled": true
+								},
+								{
+									"key": "from",
+									"value": "2024-01-01",
+									"disabled": true
+								},
+								{
+									"key": "to",
+									"value": "2024-12-31",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Search medical records by patient name, type, or description"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Medical Records",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/medical-records/getAll?page=1&limit=20&sort=resultDate&order=desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["medical-records", "getAll"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "patientId",
+									"value": "{{patientId}}",
+									"disabled": true
+								},
+								{
+									"key": "priority",
+									"value": "Normal",
+									"disabled": true
+								},
+								{
+									"key": "typeMedical",
+									"value": "General",
+									"disabled": true
+								},
+								{
+									"key": "from",
+									"value": "2024-01-01",
+									"disabled": true
+								},
+								{
+									"key": "to",
+									"value": "2024-12-31",
+									"disabled": true
+								},
+								{
+									"key": "sort",
+									"value": "resultDate"
+								},
+								{
+									"key": "order",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Get all medical records with pagination and filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Patient Medical Records",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/medical-records/patient/{{patientId}}?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["medical-records", "patient", "{{patientId}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "priority",
+									"value": "Urgent",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all medical records for a specific patient"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Medical Record by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/medical-records/{{medicalRecordId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["medical-records", "{{medicalRecordId}}"]
+						},
+						"description": "Get a single medical record by ID with full details"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Action to Medical Record",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "type",
+									"value": "treatment",
+									"type": "text",
+									"description": "treatment | scanner | analysis"
+								},
+								{
+									"key": "description",
+									"value": "Prescribed medication for 7 days",
+									"type": "text"
+								},
+								{
+									"key": "document",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/medical-records/{{medicalRecordId}}/action",
+							"host": ["{{baseUrl}}"],
+							"path": ["medical-records", "{{medicalRecordId}}", "action"]
+						},
+						"description": "Add an action (treatment, scanner, analysis) to a medical record"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Medical Record",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "priority",
+									"value": "À suivre",
+									"type": "text"
+								},
+								{
+									"key": "typeMedical",
+									"value": "Follow-up Consultation",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Updated description",
+									"type": "text"
+								},
+								{
+									"key": "resultDate",
+									"value": "2024-10-25",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/medical-records/{{medicalRecordId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["medical-records", "{{medicalRecordId}}"]
+						},
+						"description": "Update a medical record and optionally add new documents"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Medical Record",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/medical-records/{{medicalRecordId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["medical-records", "{{medicalRecordId}}"]
+						},
+						"description": "Delete a medical record"
+					},
+					"response": []
+				}
+			],
+			"description": "Medical records management and patient history"
+		},
+		{
+			"name": "⚙️ System Configuration",
+			"item": [
+				{
+					"name": "Holidays",
+					"item": [
+						{
+							"name": "Get All Holidays",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/system/holidays?active=true",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "holidays"],
+									"query": [
+										{
+											"key": "active",
+											"value": "true"
+										},
+										{
+											"key": "year",
+											"value": "2024",
+											"disabled": true
+										},
+										{
+											"key": "month",
+											"value": "12",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Get all holidays with optional filters"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Holiday by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/system/holidays/:id",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "holidays", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Get single holiday by ID"
+							},
+							"response": []
+						},
+						{
+							"name": "Create Holiday",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"New Year\",\n  \"date\": \"2025-01-01\",\n  \"description\": \"New Year's Day\",\n  \"active\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/system/holidays",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "holidays"]
+								},
+								"description": "Create a new holiday"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Holiday",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated Holiday Name\",\n  \"date\": \"2025-01-01\",\n  \"description\": \"Updated description\",\n  \"active\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/system/holidays/:id",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "holidays", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Update a holiday"
+							},
+							"response": []
+						},
+						{
+							"name": "Toggle Holiday Status",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/system/holidays/:id/toggle",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "holidays", ":id", "toggle"],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Toggle holiday active status"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Holiday",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/system/holidays/:id",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "holidays", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Delete a holiday"
+							},
+							"response": []
+						}
+					],
+					"description": "Holiday management endpoints"
+				},
+				{
+					"name": "Working Hours",
+					"item": [
+						{
+							"name": "Get All Working Hours",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/system/working-hours?active=true",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "working-hours"],
+									"query": [
+										{
+											"key": "active",
+											"value": "true"
+										},
+										{
+											"key": "day",
+											"value": "lundi",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Get all working hours with optional filters"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Working Hour by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/system/working-hours/:id",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "working-hours", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Get single working hour by ID"
+							},
+							"response": []
+						},
+						{
+							"name": "Create Working Hour",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"day\": \"lundi\",\n  \"start\": \"09:00\",\n  \"end\": \"17:00\",\n  \"active\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/system/working-hours",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "working-hours"]
+								},
+								"description": "Create working hours for a day"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Working Hour",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"day\": \"lundi\",\n  \"start\": \"08:00\",\n  \"end\": \"18:00\",\n  \"active\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/system/working-hours/:id",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "working-hours", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Update working hours"
+							},
+							"response": []
+						},
+						{
+							"name": "Toggle Working Hour Status",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/system/working-hours/:id/toggle",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "working-hours", ":id", "toggle"],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Toggle working hour active status"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Working Hour",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/system/working-hours/:id",
+									"host": ["{{baseUrl}}"],
+									"path": ["system", "working-hours", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Delete working hours"
+							},
+							"response": []
+						}
+					],
+					"description": "Working hours management endpoints"
+				}
+			],
+			"description": "System configuration for holidays and working hours"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

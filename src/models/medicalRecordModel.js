@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import fileSchema from "./fileModel.js";
 
 const actionSchema = new mongoose.Schema({
   type: { type: String, enum: ["treatment", "scanner", "analysis"], required: true },
@@ -13,7 +14,7 @@ const medicalRecordSchema = new mongoose.Schema({
   priority: { type: String, enum: ["Normal", "À suivre", "Traitement nécessaire", "Urgent"], default: "Normal" },
   typeMedical: { type: String, required: true },
   description: { type: String },
-  document: [{ type: String }], // optional main document
+  document: [fileSchema], // optional main document
   actions: [actionSchema],
   resultDate: { type: Date, default: Date.now }
 }, { timestamps: true });
