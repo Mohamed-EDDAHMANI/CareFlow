@@ -34,17 +34,5 @@ router.use('/medical-records', medicalRecordRoutes);
 // ⚙️ System Configuration (working hours, holidays, settings)
 router.use('/system', systemRoutes);
 
-// // 🔔 Notification Management (email/whatsapp, read status)
-// router.use('/notifications', notificationRoutes);
-
-// // ===== Global Utility Routes =====
-
-// router.use('/search', searchRoutes);
-
-// // 🎯 Advanced Filtering
-// router.get('/filter', filterRoutes);
-
-// // 📊 Dashboard Statistics
-// router.get('/stats', statsRoutes);
 
 export default router;

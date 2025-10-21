@@ -52,7 +52,7 @@ app.use(morgan('combined', { stream: fs.createWriteStream('./access.log', { flag
 
 // ===== Health Check =====
 app.get("/health", (req, res) => res.status(200).send("OK"));
-app.get("/", (req, res) => res.send("Server is running 🚀"));
+app.get("/", (req, res) => res.send("CliniqueService API is running 🚀"));
 
 // ===== API Routes =====
 app.use('/api', routes);
@@ -82,12 +82,12 @@ connectDB()
     await initMinio();
 
     app.listen(PORT, () =>
-      console.log(`✅ Server running on port ${PORT}`)
+      console.log(`✅ CliniqueService Server running on port ${PORT}`)
     );
     
   })
   .catch((error) => {
-    console.error("❌ Database connection failed:", error.message);
+    console.error("❌ CliniqueService Database connection failed:", error.message);
     process.exit(1);
   });
 

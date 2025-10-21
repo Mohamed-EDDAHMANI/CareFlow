@@ -2,6 +2,7 @@ import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/appError.js';
 import Holiday from '../models/HolidayModel.js';
 import WorkingHour from '../models/WorkingHourModel.js';
+import { s3 } from '../config/s3Config.js'
 
 // ==================== HOLIDAY MANAGEMENT ====================
 
@@ -63,9 +64,9 @@ export const createHoliday = catchAsync(async (req, res, next) => {
     const { name, date, description, active = true } = req.body;
 
     // Check if holiday already exists on this date
-    const existingHoliday = await Holiday.findOne({ 
+    const existingHoliday = await Holiday.findOne({
         date: new Date(date),
-        active: true 
+        active: true
     });
 
     if (existingHoliday) {
@@ -399,3 +400,16 @@ export const toggleWorkingHourStatus = catchAsync(async (req, res, next) => {
         data: workingHour
     });
 });
+
+
+export const downloadFile = catchAsync(async (req, res, next) => {
+    const { objectName } = req.params;
+
+    const stat = await s3.statObject(process.env.MINIO_BUCKET_NAME, objectName);
+
+    res.setHeader("Content-Type", stat.metaData["content-type"] || "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${objectName}"`);
+
+    const stream = await s3.getObject(process.env.MINIO_BUCKET_NAME, objectName);
+    stream.pipe(res);
+})

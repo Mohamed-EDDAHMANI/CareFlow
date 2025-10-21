@@ -11,7 +11,8 @@ import {
     createWorkingHour,
     updateWorkingHour,
     deleteWorkingHour,
-    toggleWorkingHourStatus
+    toggleWorkingHourStatus,
+    downloadFile
 } from '../controllers/systemController.js';
 import { protect, authorize } from '../middlewares/authorize.js';
 import validate from '../middlewares/validate.js';
@@ -212,5 +213,13 @@ router.delete(
     authorize('manage_system'),
     deleteWorkingHour
 );
+
+router.get('system/:objectName',
+    protect,
+    authorize('view_appointment'),
+    authorize('view_medical_record'),
+    authorize('view_patient_history'),
+    downloadFile
+)
 
 export default router;

@@ -28,7 +28,7 @@ down:
 # ---------------------------------
 
 logs:
-	docker logs careflow_app -f
+	docker logs cliniqueService_app -f
 
 status:
 	docker ps

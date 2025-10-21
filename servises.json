@@ -1,0 +1,274 @@
+{
+  "project": {
+    "name": "CareFlow EHR (Full System)",
+    "description": "Système complet de gestion EHR organisé en microservices.",
+    "architecture": "Microservices",
+    "services": [
+      "CliniqueService",
+      "LaboratoireService",
+      "PharmacyService"
+    ]
+  },
+  "microservices": [
+    {
+      "name": "CliniqueService",
+      "description": "Service principal (noyau) gérant l'identité, les patients, les rdv, les consultations et les documents.",
+      "actors": [
+        "Utilisateur (Base)",
+        "Administrateur",
+        "Médecin",
+        "Infirmier(ère)",
+        "Secrétaire",
+        "Patient"
+      ],
+      "entities": [
+        {
+          "name": "User",
+          "description": "Gestion de l'identité, authentification (JWT) et rôles.",
+          "attributes": [
+            { "name": "_id", "type": "ObjectId" },
+            { "name": "email", "type": "String", "isUnique": true },
+            { "name": "passwordHash", "type": "String" },
+            { "name": "role", "type": "String", "enum": ["admin", "medecin", "infirmier", "secretaire", "patient", "pharmacien", "labo_manager"] },
+            { "name": "isActive", "type": "Boolean", "default": true },
+            { "name": "profile", "type": "Object" }
+          ]
+        },
+        {
+          "name": "Patient",
+          "description": "Dossier démographique et médical de base du patient.",
+          "attributes": [
+            { "name": "_id", "type": "ObjectId" },
+            { "name": "userId", "type": "ObjectId", "ref": "User" },
+            { "name": "dossierId", "type": "String", "isUnique": true },
+            { "name": "contactInfo", "type": "Object" },
+            { "name": "assurance", "type": "Object" },
+            { "name": "allergies", "type": "Array<String>" },
+            { "name": "antecedents", "type": "Array<String>" },
+            { "name": "consentements", "type": "Array<Object>" }
+          ]
+        },
+        {
+          "name": "Appointment",
+          "description": "Gestion des rendez-vous et des disponibilités.",
+          "attributes": [
+            { "name": "_id", "type": "ObjectId" },
+            { "name": "patientId", "type": "ObjectId", "ref": "Patient" },
+            { "name": "practitionerId", "type": "ObjectId", "ref": "User" },
+            { "name": "startTime", "type": "Date" },
+            { "name": "endTime", "type": "Date" },
+            { "name": "status", "type": "String", "enum": ["scheduled", "completed", "cancelled"] },
+            { "name": "motif", "type": "String" }
+          ]
+        },
+        {
+          "name": "Consultation",
+          "description": "Dossier d'une rencontre clinique (post-rdv).",
+          "attributes": [
+            { "name": "_id", "type": "ObjectId" },
+            { "name": "appointmentId", "type": "ObjectId", "ref": "Appointment" },
+            { "name": "patientId", "type": "ObjectId", "ref": "Patient" },
+            { "name": "medecinId", "type": "ObjectId", "ref": "User" },
+            { "name": "vitals", "type": "Object" },
+            { "name": "diagnostics", "type": "Array<String>" },
+            { "name": "procedures", "type": "Array<String>" }
+          ]
+        },
+        {
+          "name": "MedicalDocument",
+          "description": "Stockage centralisé (S3/MinIO) pour tous les documents.",
+          "attributes": [
+            { "name": "_id", "type": "ObjectId" },
+            { "name": "patientId", "type": "ObjectId", "ref": "Patient" },
+            { "name": "uploaderId", "type": "ObjectId", "ref": "User" },
+            { "name": "storageKey", "type": "String" },
+            { "name": "filename", "type": "String" },
+            { "name": "mimeType", "type": "String" },
+            { "name": "size", "type": "Number" },
+            { "name": "category", "type": "String", "enum": ["imaging", "report", "external", "lab_report", "other"] },
+            { "name": "uploadDate", "type": "Date" }
+          ]
+        }
+      ],
+      "useCases": [
+        "S'inscrire",
+        "Se connecter (JWT)",
+        "Rafraîchir le token",
+        "Réinitialiser le mot de passe",
+        "Gérer les comptes utilisateurs (Admin)",
+        "Suspendre/Réactiver un compte (Admin)",
+        "Créer/Modifier/Consulter un dossier patient",
+        "Rechercher un patient",
+        "Planifier un rendez-vous",
+        "Vérifier les disponibilités (prévention conflits 409)",
+        "Modifier/Annuler un rendez-vous",
+        "Voir l'agenda (par médecin, par clinique)",
+        "Consulter ses rendez-vous (Patient)",
+        "Créer une consultation (post-rdv)",
+        "Enregistrer les constantes vitales",
+        "Uploader un document (imagerie, rapport externe)",
+        "Consulter tous les documents d'un patient",
+        "Générer une URL de téléchargement présignée"
+      ],
+      "stateMachines": [
+        {
+          "entity": "Appointment",
+          "attribute": "status",
+          "states": ["scheduled", "completed", "cancelled"]
+        }
+      ],
+      "apiEndpoints": [
+        { "method": "POST", "route": "/auth/register", "description": "S'inscrire" },
+        { "method": "POST", "route": "/auth/login", "description": "Se connecter (JWT)" },
+        { "method": "POST", "route": "/auth/refresh", "description": "Rafraîchir le token" },
+        { "method": "POST", "route": "/auth/reset-password", "description": "Réinitialiser le mot de passe" },
+        { "method": "GET", "route": "/admin/users", "description": "Gérer les comptes utilisateurs (Admin) - Lister" },
+        { "method": "PUT", "route": "/admin/users/{id}/status", "description": "Suspendre/Réactiver un compte (Admin)" },
+        { "method": "POST", "route": "/patients", "description": "Créer un dossier patient" },
+        { "method": "GET", "route": "/patients/{id}", "description": "Consulter un dossier patient" },
+        { "method": "PUT", "route": "/patients/{id}", "description": "Modifier un dossier patient" },
+        { "method": "GET", "route": "/patients/search", "description": "Rechercher un patient" },
+        { "method": "POST", "route": "/appointments", "description": "Planifier un rendez-vous (avec prévention conflits 409)" },
+        { "method": "GET", "route": "/appointments/{id}", "description": "Consulter un rendez-vous" },
+        { "method": "PUT", "route": "/appointments/{id}", "description": "Modifier ou annuler un rendez-vous" },
+        { "method": "GET", "route": "/appointments/availability", "description": "Vérifier les disponibilités" },
+        { "method": "POST", "route": "/consultations", "description": "Créer une consultation (post-rdv) et enregistrer les vitales" },
+        { "method": "GET", "route": "/patients/{patientId}/consultations", "description": "Consulter les consultations d'un patient" },
+        { "method": "POST", "route": "/documents/upload", "description": "Uploader un document (imagerie, rapport externe)" },
+        { "method": "GET", "route": "/documents/{id}/download", "description": "Générer une URL de téléchargement présignée" },
+        { "method": "GET", "route": "/patients/{patientId}/documents", "description": "Consulter tous les documents d'un patient" }
+      ]
+    },
+    {
+      "name": "LaboratoireService",
+      "description": "Gère les ordres d'analyses et les résultats de laboratoire.",
+      "actors": [
+        "Responsable de laboratoire",
+        "Médecin",
+        "Patient"
+      ],
+      "entities": [
+        {
+          "name": "LabOrder",
+          "description": "Ordre d'analyse de laboratoire.",
+          "attributes": [
+            { "name": "_id", "type": "ObjectId" },
+            { "name": "patientId", "type": "ObjectId", "comment": "Ref vers CliniqueService.Patient" },
+            { "name": "medecinId", "type": "ObjectId", "comment": "Ref vers CliniqueService.User" },
+            { "name": "consultationId", "type": "ObjectId", "comment": "Ref optionnelle vers CliniqueService.Consultation" },
+            { "name": "orderDate", "type": "Date" },
+            { "name": "status", "type": "String", "enum": ["ordered", "received", "validated"] },
+            { "name": "tests", "type": "Array<String>" }
+          ]
+        },
+        {
+          "name": "LabResult",
+          "description": "Résultats d'une analyse (structurés ou lien vers document).",
+          "attributes": [
+            { "name": "_id", "type": "ObjectId" },
+            { "name": "orderId", "type": "ObjectId", "ref": "LabOrder" },
+            { "name": "receivedDate", "type": "Date" },
+            { "name": "validatedDate", "type": "Date" },
+            { "name": "anomalyFlags", "type": "Array<String>" },
+            { "name": "resultsData", "type": "Object", "comment": "Pour données structurées" },
+            { "name": "reportDocumentId", "type": "ObjectId", "comment": "Ref vers CliniqueService.MedicalDocument" }
+          ]
+        }
+      ],
+      "useCases": [
+        "Créer un ordre de laboratoire (Médecin)",
+        "Consulter un ordre de laboratoire (Labo, Médecin)",
+        "Uploader les résultats (Labo)",
+        "Associer un rapport PDF (Labo -> CliniqueService)",
+        "Consulter les résultats (Médecin, Patient)",
+        "Télécharger le rapport PDF (via CliniqueService)"
+      ],
+      "stateMachines": [
+        {
+          "entity": "LabOrder",
+          "attribute": "status",
+          "states": ["ordered", "received", "validated"],
+          "transitions": [
+            { "from": "ordered", "to": "received", "action": "Upload Résultats" },
+            { "from": "received", "to": "validated", "action": "Validation Labo" }
+          ]
+        }
+      ],
+      "apiEndpoints": [
+        { "method": "POST", "route": "/lab-orders", "description": "Créer un ordre de laboratoire (Médecin)" },
+        { "method": "GET", "route": "/lab-orders/{id}", "description": "Consulter un ordre de laboratoire (Labo, Médecin)" },
+        { "method": "POST", "route": "/lab-orders/{orderId}/results", "description": "Uploader les résultats (Labo) et associer un rapport PDF" },
+        { "method": "GET", "route": "/patients/{patientId}/lab-results", "description": "Consulter les résultats de laboratoire (Médecin, Patient)" }
+      ]
+    },
+    {
+      "name": "PharmacyService",
+      "description": "Gère les prescriptions, les pharmacies partenaires et la dispensation.",
+      "actors": [
+        "Pharmacien",
+        "Médecin",
+        "Patient"
+      ],
+      "entities": [
+        {
+          "name": "Pharmacie",
+          "description": "Référentiel des pharmacies partenaires.",
+          "attributes": [
+            { "name": "_id", "type": "ObjectId" },
+            { "name": "identifiant", "type": "String", "isUnique": true },
+            { "name": "nom", "type": "String" },
+            { "name": "coordonnees", "type": "Object" },
+            { "name": "horaires", "type": "String" }
+          ]
+        },
+        {
+          "name": "Prescription",
+          "description": "Ordonnance médicale.",
+          "attributes": [
+            { "name": "_id", "type": "ObjectId" },
+            { "name": "patientId", "type": "ObjectId", "comment": "Ref vers CliniqueService.Patient" },
+            { "name": "medecinId", "type": "ObjectId", "comment": "Ref vers CliniqueService.User" },
+            { "name": "pharmacyId", "type": "ObjectId", "ref": "Pharmacie", "nullable": true },
+            { "name": "status", "type": "String", "enum": ["draft", "signed", "sent", "dispensed"] },
+            { "name": "medications", "type": "Array<Object>", "subAttributes": [
+              { "name": "medicament", "type": "String" },
+              { "name": "dosage", "type": "String" },
+              { "name": "frequence", "type": "String" },
+              { "name": "duree", "type": "String" }
+            ]}
+          ]
+        }
+      ],
+      "useCases": [
+        "Prescrire un médicament (Médecin)",
+        "Signer une prescription (Médecin)",
+        "Assigner une prescription à une pharmacie (Médecin/Patient)",
+        "Consulter ses prescriptions (Patient)",
+        "Voir le statut de l'ordonnance (Patient)",
+        "Consulter les prescriptions assignées (Pharmacien)",
+        "Mettre à jour le statut de remise (Pharmacien)"
+      ],
+      "stateMachines": [
+        {
+          "entity": "Prescription",
+          "attribute": "status",
+          "states": ["draft", "signed", "sent", "dispensed"],
+          "transitions": [
+            { "from": "draft", "to": "signed", "action": "Signature Médecin" },
+            { "from": "signed", "to": "sent", "action": "Assignation Pharmacie" },
+            { "from": "sent", "to": "dispensed", "action": "Dispensation Pharmacien" }
+          ]
+        }
+      ],
+      "apiEndpoints": [
+        { "method": "POST", "route": "/prescriptions", "description": "Prescrire un médicament (Médecin)" },
+        { "method": "PUT", "route": "/prescriptions/{id}/sign", "description": "Signer une prescription (Médecin)" },
+        { "method": "PUT", "route": "/prescriptions/{id}/assign", "description": "Assigner une prescription à une pharmacie (Médecin/Patient)" },
+        { "method": "PUT", "route": "/prescriptions/{id}/dispense", "description": "Mettre à jour le statut de remise (Pharmacien)" },
+        { "method": "GET", "route": "/pharmacies", "description": "Lister les pharmacies partenaires" },
+        { "method": "GET", "route": "/pharmacies/me/prescriptions", "description": "Consulter les prescriptions assignées (Pharmacien)" },
+        { "method": "GET", "route": "/patients/{patientId}/prescriptions", "description": "Consulter ses prescriptions et voir le statut (Patient)" }
+      ]
+    }
+  ]
+}

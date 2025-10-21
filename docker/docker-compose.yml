@@ -5,8 +5,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: careflow-app:dev
-    container_name: careflow_app
+    image: cliniqueservice-app:dev
+    container_name: cliniqueService_app
     env_file:
       - ../.env
     environment:
@@ -26,40 +26,40 @@ services:
       - redis
       - minio  # ✅ Ajoutez la dépendance
     networks:
-      - careflow-net
+      - cliniqueService-net
 
   mongo:
     image: mongo:6.0
     logging:
       driver: "none"
-    container_name: careflow_mongo
+    container_name: cliniqueService_mongo
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-password}
-      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-careflow}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-cliniqueService}
     volumes:
       - mongo_data:/data/db
     networks:
-      - careflow-net
+      - cliniqueService-net
     ports:
       - "27017:27017"
     command: ["mongod", "--bind_ip_all"]
 
   redis:
     image: redis:7-alpine
-    container_name: careflow_redis
+    container_name: cliniqueService_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - careflow-net
+      - cliniqueService-net
 
   minio:
     image: minio/minio:latest
-    container_name: careflow_minio
+    container_name: cliniqueService_minio
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-admin}
@@ -70,7 +70,7 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - careflow-net
+      - cliniqueService-net
     command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -84,5 +84,5 @@ volumes:
   minio_data:
 
 networks:
-  careflow-net:
+  cliniqueService-net:
     driver: bridge

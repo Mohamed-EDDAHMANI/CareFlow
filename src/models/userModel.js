@@ -9,25 +9,61 @@ const userSchema = new mongoose.Schema({
   roleId: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true },
   status: { type: String, enum: ["active", "suspended"], default: "active" },
   refreshToken: { type: String },
-  cin: { type: String , required: true, unique: true },
+  cin: { type: String, required: true, unique: true },
   permissions: {
-    create_user: { type: Boolean, default: false },
-    delete_user: { type: Boolean, default: false },
-    update_user: { type: Boolean, default: false },
+    // --- Gestion Système & Admin ---
+    manage_system: { type: Boolean, default: false }, // Accès super-admin
+    manage_users_view: { type: Boolean, default: false },
+    manage_users_create: { type: Boolean, default: false },
+    manage_users_update: { type: Boolean, default: false },
+    manage_users_delete: { type: Boolean, default: false },
+    manage_users_suspend: { type: Boolean, default: false },
 
-    create_appointment: { type: Boolean, default: false },
-    update_appointment: { type: Boolean, default: false },
-    cancel_appointment: { type: Boolean, default: false },
-    view_appointment: { type: Boolean, default: false },
+    // --- Gestion Patients (CliniqueService) ---
+    patient_view: { type: Boolean, default: false },
+    patient_create: { type: Boolean, default: false },
+    patient_update: { type: Boolean, default: false },
+    patient_delete: { type: Boolean, default: false },
+    patient_search: { type: Boolean, default: false },
+    patient_view_history: { type: Boolean, default: false }, // Vue agrégée
 
-    create_medical_record: { type: Boolean, default: false },
-    view_medical_record: { type: Boolean, default: false },
-    view_patient_history: { type: Boolean, default: false },
+    // --- Gestion Rendez-vous (CliniqueService) ---
+    appointment_view_own: { type: Boolean, default: false },
+    appointment_view_all: { type: Boolean, default: false }, // Pour secrétaires/admin
+    appointment_create: { type: Boolean, default: false },
+    appointment_update: { type: Boolean, default: false },
+    appointment_cancel: { type: Boolean, default: false },
+
+    // --- Gestion Consultations (CliniqueService) ---
+    consultation_create: { type: Boolean, default: false }, // Créer + enregistrer vitales
+    consultation_view: { type: Boolean, default: false },
+    consultation_update: { type: Boolean, default: false }, // Modifier diagnostics, notes
+
+    // --- Gestion Documents (CliniqueService) ---
+    document_upload: { type: Boolean, default: false },
+    document_view: { type: Boolean, default: false },
+    document_delete: { type: Boolean, default: false },
+    document_download: { type: Boolean, default: false }, // (Générer URL présignée)
+
+    // --- Gestion Laboratoire (LaboratoireService) ---
+    lab_order_create: { type: Boolean, default: false }, // Médecin
+    lab_order_view: { type: Boolean, default: false }, // Médecin, Patient, Labo
+    lab_result_upload: { type: Boolean, default: false }, // Labo
+    lab_result_validate: { type: Boolean, default: false }, // Labo (responsable)
+    lab_result_view: { type: Boolean, default: false }, // Médecin, Patient
+
+    // --- Gestion Pharmacie (PharmacyService) ---
+    prescription_create: { type: Boolean, default: false }, // Médecin
+    prescription_sign: { type: Boolean, default: false }, // Médecin (valider un 'draft')
+    prescription_view: { type: Boolean, default: false }, // Médecin, Patient
+    prescription_assign_pharmacy: { type: Boolean, default: false }, // Médecin/Patient
     
-    update_medical_record: { type: Boolean, default: false },
-
-    send_notification: { type: Boolean, default: false },
-    manage_system: { type: Boolean, default: false }
+    // Permissions spécifiques Pharmacien
+    pharmacy_view_assigned: { type: Boolean, default: false }, // Pharmacien
+    pharmacy_dispense_prescription: { type: Boolean, default: false }, // Pharmacien
+    
+    // Permissions Admin pour gérer les partenaires
+    pharmacy_manage_partners: { type: Boolean, default: false }, // Admin (CRUD pharmacies)
   }
 }, { timestamps: true });
 

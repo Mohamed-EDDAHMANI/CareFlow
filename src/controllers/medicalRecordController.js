@@ -5,13 +5,7 @@ import AppError from "../utils/appError.js";
 
 // CREATE - Create a new medical record with optional documents
 export const createMedicalRecord = catchAsync(async (req, res, next) => {
-    res.json({
-        mess: req.uploadedFiles
-    })
     const { patientId, appointmentId, priority, typeMedical, description, resultDate } = req.body;
-
-    // Handle uploaded documents (optional)
-    const documents = req.files ? req.files.map(file => file.path) : [];
 
     // Verify appointment exists
     const appointment = await Appointment.findById(appointmentId);
@@ -26,7 +20,7 @@ export const createMedicalRecord = catchAsync(async (req, res, next) => {
         priority: priority || 'Normal',
         typeMedical,
         description,
-        document: documents,
+        document: req.uploadedFiles,
         resultDate: resultDate || new Date(),
         createdBy: req.user._id
     });
@@ -40,7 +34,8 @@ export const createMedicalRecord = catchAsync(async (req, res, next) => {
     res.status(201).json({
         success: true,
         message: 'Medical record created successfully',
-        data: medicalRecord
+        data: medicalRecord,
+        errors: req.errors && req.errors.length > 0 ? req.errors : undefined
     });
 });
 

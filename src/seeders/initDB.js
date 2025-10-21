@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
 
 // models
 import Role from "../models/roleModel.js";
@@ -30,7 +29,9 @@ export default async function initDB() {
                 { name: "doctore", description: "Fournit des soins" },
                 { name: "infermeri", description: "Assiste les patients" },
                 { name: "accueil", description: "Gère l’accueil" },
-                { name: "patient", description: "Accède aux soins" }
+                { name: "patient", description: "Accède aux soins" },
+                { name: "pharmacist", description: "Référentiel des pharmacies partenaires" },
+                { name: "responsabe", description: "Responsable de laboratoire" }
             ];
 
             await Role.insertMany(roles);
@@ -53,18 +54,42 @@ export default async function initDB() {
                 cin: DEFAULT_ADMIN_CIN,
                 birthDate: new Date(DEFAULT_ADMIN_BIRTHDATE),
                 permissions: {
-                    create_user: true,
-                    delete_user: true,
-                    update_user: true,
-                    create_appointment: true,
-                    update_appointment: true,
-                    cancel_appointment: true,
-                    view_appointment: true,
-                    create_medical_record: true,
-                    view_medical_record: true,
-                    update_medical_record: true,
-                    send_notification: true,
-                    manage_system: true
+                    manage_system: true,
+                    manage_users_view: true,
+                    manage_users_create: true,
+                    manage_users_update: true,
+                    manage_users_delete: true,
+                    manage_users_suspend: true,
+                    patient_view: true,
+                    patient_create: true,
+                    patient_update: true,
+                    patient_delete: true,
+                    patient_search: true,
+                    patient_view_history: true,
+                    appointment_view_own: true,
+                    appointment_view_all: true,
+                    appointment_create: true,
+                    appointment_update: true,
+                    appointment_cancel: true,
+                    consultation_create: true,
+                    consultation_view: true,
+                    consultation_update: true,
+                    document_upload: true,
+                    document_view: true,
+                    document_delete: true,
+                    document_download: true,
+                    lab_order_create: true,
+                    lab_order_view: true,
+                    lab_result_upload: true,
+                    lab_result_validate: true,
+                    lab_result_view: true,
+                    prescription_create: true,
+                    prescription_sign: true,
+                    prescription_view: true,
+                    prescription_assign_pharmacy: true,
+                    pharmacy_view_assigned: true,
+                    pharmacy_dispense_prescription: true,
+                    pharmacy_manage_partners: true,
                 }
             });
             await adminUser.save();

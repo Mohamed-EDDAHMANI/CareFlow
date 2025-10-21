@@ -8,7 +8,7 @@ import {
     updateAppointmentStatus
 } from '../controllers/appoitmentController.js'
 import { protect, authorize } from '../middlewares/authorize.js';
-// import { uploadAppointmentDocuments } from '../middlewares/uploadAppointment.js';
+import { uploadFiles } from '../middlewares/uploadFiles.js';
 import validate from '../middlewares/validate.js';
 import { updateAppointmentStatusSchemaJoi } from '../validations/joiValidation.js';
 
@@ -29,7 +29,7 @@ const router = Router();
  *   documents: file[] (optional) - Max 5 files, 10MB each (PDF, DOC, DOCX, images)
  * }
  */
-router.post('/create/:patientId', protect, authorize('administration'), createAppointment);
+router.post('/create/:patientId', protect, authorize('administration'), uploadFiles, createAppointment);
 
 /**
  * @route   GET /api/appointments/search
