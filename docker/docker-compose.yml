@@ -13,7 +13,7 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - CHOKIDAR_USEPOLLING=true
-      - MINIO_ENDPOINT=minio  # ✅ Override: utilisez le nom du service
+      - MINIO_ENDPOINT=minio
     ports:
       - "3000:3000"
     volumes:
@@ -24,7 +24,7 @@ services:
     depends_on:
       - mongo
       - redis
-      - minio  # ✅ Ajoutez la dépendance
+      - minio
     networks:
       - cliniqueService-net
 
@@ -65,8 +65,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-admin}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-password}
     ports:
-      - "9000:9000"  # API
-      - "9001:9001"  # Console Web
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - minio_data:/data
     networks:

@@ -18,6 +18,8 @@ import initDB from "./seeders/initDB.js";
 
 // ===== Import Routes =====
 import routes from "./routes/index.js";
+import labRouters from "./routes/labRouters.js";
+import pharRouters from "./routes/pharRouters.js";
 
 // ===== Initialize App =====
 const app = express();
@@ -29,33 +31,21 @@ app.use(express.urlencoded({ extended: true }));// pour accept application/x-www
 app.use(cors());
 app.use(cookieParser());
 
-// Serve uploaded files as static content
-app.use('/uploads', express.static('uploads'));
-
-// ===== Request Logger (before morgan) =====
-app.use((req, res, next) => {
-    console.log(`🌐 ${req.method} ${req.path}`);
-    if (req.files) {
-        console.log(`   📎 Files: ${req.files.length}`);
-    }
-    next();
-});
 
 // ===== Morgan config =====
 // ( print all request / like a file )
 app.use(morgan('dev'));
-app.use(morgan('combined', { stream: fs.createWriteStream('./access.log', { flags: 'a' }) }));
-
-// ===== if i will chose print the logis en a file 
-// const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
-// app.use(morgan('combined', { stream: accessLogStream }));
 
 // ===== Health Check =====
 app.get("/health", (req, res) => res.status(200).send("OK"));
 app.get("/", (req, res) => res.send("CliniqueService API is running 🚀"));
 
 // ===== API Routes =====
-app.use('/api', routes);
+app.use('/apiCli', routes);
+
+// ===== API External =====
+app.use('/apiLab', labRouters);
+app.use('/apiPhar', pharRouters);
 
 
 // ===== 404 Handler =====

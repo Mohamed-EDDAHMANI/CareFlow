@@ -15,13 +15,13 @@ ERFRESH_TOKEN_ADMIN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZWE0YjQ3N
 # ---------------------------------
 
 build:
-	docker-compose -f docker/docker-compose.yml build
+	docker-compose -p cliniqueservice -f docker/docker-compose.yml build app
 
 up:
-	docker-compose -f docker/docker-compose.yml up -d
+	docker-compose -p cliniqueservice -f docker/docker-compose.yml up
 
 down:
-	docker-compose -f docker/docker-compose.yml down
+	docker-compose -p cliniqueservice -f docker/docker-compose.yml down
 
 # ---------------------------------
 # Monitoring Commands
