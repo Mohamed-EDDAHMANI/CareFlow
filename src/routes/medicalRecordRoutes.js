@@ -37,7 +37,7 @@ const router = Router();
 router.post(
     '/create',
     protect,
-    authorize('create_medical_record'),
+    authorize('consultation_create'),
     uploadFiles,
     validate(medicalRecordSchemaJoi),
     createMedicalRecord
@@ -62,7 +62,7 @@ router.post(
 router.get(
     '/search',
     protect,
-    authorize('view_medical_record'),
+    authorize('consultation_view'),
     searchMedicalRecords
 );
 
@@ -85,7 +85,7 @@ router.get(
 router.get(
     '/getAll',
     protect,
-    authorize('view_medical_record'),
+    authorize('consultation_view'),
     getAllMedicalRecords
 );
 
@@ -110,7 +110,7 @@ router.get(
 router.get(
     '/patient/:patientId',
     protect,
-    authorize('view_medical_record'),
+    authorize('consultation_view'),
     getPatientMedicalRecords
 );
 
@@ -130,7 +130,7 @@ router.get(
 router.post(
     '/:id/action',
     protect,
-    authorize('update_medical_record'),
+    authorize('consultation_update'),
     // uploadSingleMedicalDocument,
     validate(medicalRecordActionSchemaJoi),
     addAction
@@ -147,7 +147,7 @@ router.post(
 router.get(
     '/:id',
     protect,
-    authorize('view_medical_record'),
+    authorize('consultation_view'),
     getMedicalRecordById
 );
 
@@ -169,7 +169,7 @@ router.get(
 router.put(
     '/:id',
     protect,
-    authorize('update_medical_record'),
+    authorize('consultation_update'),
     // uploadMedicalDocuments,
     validate(updateMedicalRecordSchemaJoi),
     updateMedicalRecord

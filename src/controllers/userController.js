@@ -13,6 +13,16 @@ export const createUser = catchAsync(async (req, res, next) => {
     });
 });
 
+export const createUserPatient = catchAsync(async (req, res, next) => {
+    const newUser = await userService.createUserPatient(req.body);
+    
+    res.status(201).json({
+        success: true,
+        message: 'Patient created successfully',
+        data: newUser
+    });
+});
+
 export const deleteUser = catchAsync(async (req, res, next) => {
     await userService.deleteUserById(req.params.id);
     
@@ -31,8 +41,26 @@ export const getUserById = catchAsync(async (req, res, next) => {
     });
 });
 
+export const getPatientById = catchAsync(async (req, res, next) => {
+    const user = await userService.getPatientById(req.params.id);
+    
+    res.status(200).json({
+        success: true,
+        data: user
+    });
+});
+
 export const getUsers = catchAsync(async (req, res, next) => {
     const users = await userService.getAllUsers();
+    
+    res.status(200).json({
+        success: true,
+        data: users
+    });
+});
+
+export const getPatients = catchAsync(async (req, res, next) => {
+    const users = await userService.getPatients();
     
     res.status(200).json({
         success: true,
@@ -52,6 +80,15 @@ export const updateUser = catchAsync(async (req, res, next) => {
 
 export const searchUsers = catchAsync(async (req, res, next) => {
     const result = await userService.searchUsers(req.query);
+    
+    res.status(200).json({
+        success: true,
+        ...result
+    });
+});
+
+export const searchPatients = catchAsync(async (req, res, next) => {
+    const result = await userService.searchPatients(req.query);
     
     res.status(200).json({
         success: true,

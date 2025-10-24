@@ -47,6 +47,11 @@ export const getAppointmentById = catchAsync(async (req, res, next) => {
   res.status(200).json({ success: true, data: appt });
 });
 
+export const getOwnAppointments = catchAsync(async (req, res, next) => {
+  const appt = await appointmentService.getOwnAppointments(req.user.id,req.params.id);
+  res.status(200).json({ success: true, data: appt });
+});
+
 export const searchAppointments = catchAsync(async (req, res, next) => {
   const result = await appointmentService.searchAppointments(req.query);
 

@@ -5,7 +5,8 @@ import {
     getDoctorAppointments,
     getAppointmentById, 
     searchAppointments,
-    updateAppointmentStatus
+    updateAppointmentStatus,
+    getOwnAppointments
 } from '../controllers/appoitmentController.js'
 import { protect, authorize } from '../middlewares/authorize.js';
 import { uploadFiles } from '../middlewares/uploadFiles.js';
@@ -17,7 +18,7 @@ const router = Router();
 /**
  * @route   POST /api/appointments/create/:patientId
  * @desc    Create a new appointment with optional document uploads
- * @access  Private (requires: administration permission)
+ * @access  Private (requires: manage_system permission)
  * @params  {
  *   patientId: string (required) - Patient's user ID
  * }
@@ -29,7 +30,7 @@ const router = Router();
  *   documents: file[] (optional) - Max 5 files, 10MB each (PDF, DOC, DOCX, images)
  * }
  */
-router.post('/create/:patientId', protect, authorize('administration'), uploadFiles, createAppointment);
+router.post('/create/:patientId', protect, authorize('appointment_create'), uploadFiles, createAppointment);
 
 /**
  * @route   GET /api/appointments/search
@@ -45,7 +46,7 @@ router.post('/create/:patientId', protect, authorize('administration'), uploadFi
  *   limit: number (optional) - Items per page (default: 20)
  * }
  */
-router.get('/search', protect, authorize('administration'), searchAppointments);
+router.get('/search', protect, authorize('appointment_view_all'), searchAppointments);
 
 /**
  * @route   GET /api/appointments/all
@@ -60,12 +61,12 @@ router.get('/search', protect, authorize('administration'), searchAppointments);
  *   to: date (optional) - End date
  * }
  */
-router.get('/all', protect, authorize('administration'), getAllAppointments);
+router.get('/all', protect, authorize('appointment_view_all'), getAllAppointments);
 
 /**
  * @route   GET /api/appointments/doctor/:doctorId
  * @desc    Get all appointments for a specific doctor
- * @access  Private (requires: administration permission)
+ * @access  Private (requires: manage_system permission)
  * @params  {
  *   doctorId: string (required) - Doctor's user ID
  * }
@@ -78,17 +79,27 @@ router.get('/all', protect, authorize('administration'), getAllAppointments);
  *   to: date (optional) - End date
  * }
  */
-router.get('/doctor/:doctorId', protect, authorize('administration'), getDoctorAppointments);
+router.get('/doctor/:doctorId', protect, authorize('appointment_view_all'), getDoctorAppointments);
 
 /**
  * @route   GET /api/appointments/:id
  * @desc    Get a single appointment by ID
- * @access  Private (requires: administration permission)
+ * @access  Private (requires: manage_system permission)
  * @params  {
  *   id: string (required) - Appointment ID
  * }
  */
-router.get('/:id', protect, authorize('administration'), getAppointmentById);
+router.get('/:id/own', protect, authorize('appointment_view_own'), getOwnAppointments);
+
+/**
+ * @route   GET /api/appointments/:id
+ * @desc    Get a single appointment by ID
+ * @access  Private (requires: manage_system permission)
+ * @params  {
+ *   id: string (required) - Appointment ID
+ * }
+ */
+router.get('/:id', protect, authorize('appointment_view_all'), getAppointmentById);
 
 /**
  * @route   PATCH /api/appointments/:id/status
@@ -101,6 +112,6 @@ router.get('/:id', protect, authorize('administration'), getAppointmentById);
  *   status: string (required) - "scheduled" | "completed" | "cancelled"
  * }
  */
-router.patch('/:id/status', protect, validate(updateAppointmentStatusSchemaJoi), updateAppointmentStatus);
+router.patch('/:id/status', protect,  authorize('appointment_update'), validate(updateAppointmentStatusSchemaJoi), updateAppointmentStatus);
 
 export default router;

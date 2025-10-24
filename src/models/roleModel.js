@@ -4,7 +4,7 @@ const roleSchema = new mongoose.Schema({
   name: { 
     type: String, 
     required: true, 
-    enum: ["admin", "doctore", "infermeri", "accueil", "patient"]
+    enum: ["admin", "doctore", "infermeri", "accueil", "patient", "pharmacist", "responsabe"]
   },
   description: { type: String }
 }, { timestamps: true });

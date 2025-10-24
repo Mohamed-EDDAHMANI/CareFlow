@@ -11,6 +11,7 @@ export const s3 = new Client({
 
 export const BUCKET_NAME = process.env.MINIO_BUCKET || "documents";
 
+
 export const initMinio = async () => {
   try {
     const exists = await s3.bucketExists(BUCKET_NAME);
@@ -24,4 +25,10 @@ export const initMinio = async () => {
     console.error("❌ Erreur lors de la vérification du bucket:", err.message);
     process.exit(1);
   }
+};
+
+
+export const getFileUrl = async (fileName) => {
+  const url = await s3.presignedGetObject("your-bucket-name", fileName, 24 * 60 * 60); // 24 houres
+  return url;
 };

@@ -9,6 +9,7 @@ import AppError from "../utils/appError.js";
 import mongoose from 'mongoose';
 import crypto from 'crypto';
 import redisClient from '../config/redis.js';
+import { getFileUrl } from '../config/s3Config.js';
 
 /* --------------------------
   HELPERS (Fonctions internes, makat-exportach)
@@ -125,7 +126,7 @@ const createAppointment = async (user, patientId, { reason, type, weekOffset, do
 
   // 2. Début de la section critique (écriture) -> Utilisation de REDIS
   const end = new Date(nextSlot.start.getTime() + 60 * 60000);
-  
+
   // Créer un L-lock unique pour ce slot (docteur + heure de début)
   const lockKey = `lock:appt:${nextSlot.doctorId}:${nextSlot.start.getTime()}`;
   const lockValue = crypto.randomUUID();
@@ -172,7 +173,14 @@ const createAppointment = async (user, patientId, { reason, type, weekOffset, do
     };
     const appointment = await Appointment.create(appointmentData);
 
-    console.log(`✅ Appointment created successfully: ${appointment._id} for doctor ${nextSlot.doctorId} at ${nextSlot.start}`);
+    if (appointment.document && appointment.document.length > 0) {
+      appointment.document = await Promise.all(
+        appointment.document.map(async (doc) => {
+          const url = await getFileUrl(doc.fileName);
+          return { ...doc.toObject(), url };
+        })
+      );
+    }
     return { appointment, nextSlot };
 
   } catch (error) {
@@ -182,6 +190,62 @@ const createAppointment = async (user, patientId, { reason, type, weekOffset, do
       await redisClient.del(lockKey);
     }
   }
+};
+
+/**
+ * Récupère tous les RDV avec filtres et pagination.
+ */
+const getOwnAppointments = async (id , queryParams) => {
+  const { page = 1, limit = 20, status, from, to, sort = 'start', order = 'asc' } = queryParams;
+
+  const filter = { patientId: id};
+  if (status) filter.status = status;
+  if (from || to) {
+    filter.start = {};
+    if (from) filter.start.$gte = new Date(from);
+    if (to) filter.start.$lte = new Date(to);
+    filter.patientId = id
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const sortSpec = { [sort]: order === 'desc' ? -1 : 1 };
+
+  const [items, total] = await Promise.all([
+    Appointment.find(filter)
+      .sort(sortSpec)
+      .skip(skip)
+      .limit(Number(limit))
+      .populate('patientId', 'name email cin')
+      .populate('doctorId', 'name email cin')
+      .populate('createdBy', 'name email'),
+    Appointment.countDocuments(filter)
+  ]);
+
+  const updatedItems = await Promise.all(
+    items.map(async (element) => {
+      if (element.document && element.document.length > 0) {
+        element.document = await Promise.all(
+          element.document.map(async (doc) => {
+            const url = await getFileUrl(doc.fileName);
+            return { ...doc.toObject(), url };
+          })
+        );
+      } else {
+        element.document = [];
+      }
+      return element.toObject();
+    })
+  );
+
+
+
+  return {
+    page: Number(page),
+    limit: Number(limit),
+    total,
+    totalPages: Math.ceil(total / Number(limit)) || 1,
+    data: updatedItems
+  };
 };
 
 /**
@@ -212,12 +276,30 @@ const getAllAppointments = async (queryParams) => {
     Appointment.countDocuments(filter)
   ]);
 
+  const updatedItems = await Promise.all(
+    items.map(async (element) => {
+      if (element.document && element.document.length > 0) {
+        element.document = await Promise.all(
+          element.document.map(async (doc) => {
+            const url = await getFileUrl(doc.fileName);
+            return { ...doc.toObject(), url };
+          })
+        );
+      } else {
+        element.document = [];
+      }
+      return element.toObject();
+    })
+  );
+
+
+
   return {
     page: Number(page),
     limit: Number(limit),
     total,
     totalPages: Math.ceil(total / Number(limit)) || 1,
-    data: items
+    data: updatedItems
   };
 };
 
@@ -258,6 +340,7 @@ const getDoctorAppointments = async (doctorId, queryParams) => {
   };
 };
 
+
 /**
  * Récupère un RDV par ID.
  */
@@ -266,6 +349,16 @@ const getAppointmentById = async (id) => {
     .populate('patientId', 'name email')
     .populate('doctorId', 'name email');
   if (!appt) throw new AppError('Appointment not found', 404, 'NOT_FOUND');
+
+  if (appt.document && appt.document.length > 0) {
+    appt.document = await Promise.all(
+      appt.document.map(async (doc) => {
+        const url = await getFileUrl(doc.fileName);
+        return { ...doc.toObject(), url };
+      })
+    );
+  }
+
   return appt;
 };
 
@@ -319,12 +412,28 @@ const searchAppointments = async (queryParams) => {
   const total = result[0]?.metadata[0]?.total || 0;
   const data = result[0]?.data || [];
 
+  const updatedItems = await Promise.all(
+    data.map(async (element) => {
+      if (element.document && element.document.length > 0) {
+        element.document = await Promise.all(
+          element.document.map(async (doc) => {
+            const url = await getFileUrl(doc.fileName);
+            return { ...doc.toObject(), url };
+          })
+        );
+      } else {
+        element.document = [];
+      }
+      return element.toObject();
+    })
+  );
+
   return {
     page: Number(page),
     limit: Number(limit),
     total,
     totalPages: Math.ceil(total / Number(limit)) || 1,
-    data
+    data: updatedItems
   };
 };
 
@@ -332,13 +441,6 @@ const searchAppointments = async (queryParams) => {
  * Met à jour le statut d'un RDV (ex: 'completed', 'cancelled').
  */
 const updateAppointmentStatus = async (appointmentId, status, user) => {
-  const validStatuses = ['scheduled', 'completed', 'cancelled'];
-  if (!status || !validStatuses.includes(status)) {
-    throw new AppError(
-      `Invalid status. Must be one of: ${validStatuses.join(', ')}`, 400, 'INVALID_STATUS'
-    );
-  }
-
   const appointment = await Appointment.findById(appointmentId)
     .populate('patientId', 'name email cin')
     .populate('doctorId', 'name email cin');
@@ -347,27 +449,22 @@ const updateAppointmentStatus = async (appointmentId, status, user) => {
     throw new AppError('Appointment not found', 404, 'NOT_FOUND');
   }
 
-  const userRole = await Role.findById(user.roleId);
-  const isAssignedDoctor = appointment.doctorId?._id.toString() === user._id.toString();
-  const hasAdminRights = userRole?.name === 'admin' || user.permissions?.administration;
-
-  if (!isAssignedDoctor && !hasAdminRights) {
-    throw new AppError('You are not authorized to update this appointment.', 403, 'FORBIDDEN');
-  }
-  if (appointment.status === 'cancelled' && status !== 'cancelled') {
-    throw new AppError('Cannot change status of a cancelled appointment', 400, 'INVALID_OPERATION');
-  }
-  if (status === 'completed' && new Date() < appointment.start) {
-    throw new AppError('Cannot mark a future appointment as completed', 400, 'INVALID_OPERATION');
-  }
-
-  const oldStatus = appointment.status;
   appointment.status = status;
   await appointment.save();
 
-  console.log(`✅ Appointment ${appointmentId} status changed from "${oldStatus}" to "${status}" by ${user.name}`);
-  
-  return appointment.toObject();
+  const result = appointment.toObject();
+
+  if (result.document && result.document.length > 0) {
+    result.document = await Promise.all(
+      result.document.map(async (doc) => {
+        const url = await getFileUrl(doc.fileName);
+        return { ...doc.toObject(), url };
+      })
+    );
+  }
+
+
+  return result;
 };
 
 
@@ -377,5 +474,6 @@ export default {
   getDoctorAppointments,
   getAppointmentById,
   searchAppointments,
-  updateAppointmentStatus
+  updateAppointmentStatus,
+  getOwnAppointments
 };

@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import User from "../models/userModel.js";
 import Role from '../models/roleModel.js';
 import Appointment from '../models/appointmentModel.js';
-import MedicalRecord from '../models/medicalRecordModel.js';
+import Consultation from '../models/medicalRecordModel.js';
 import AppError from '../utils/appError.js';
 
 const getPermissionsForRole = (roleName) => {
@@ -57,6 +57,33 @@ const getPermissionsForRole = (roleName) => {
   }
 };
 
+const createUserPatient = async (userData) => {
+    const { name, email, password, birthDate, roleId, status, cin } = userData;
+
+    if (await User.findOne({ email })) {
+        throw new AppError('Email already in use', 400, 'VALIDATION_ERROR');
+    }
+    if (await User.findOne({ cin })) {
+        throw new AppError('Cin already in use', 400, 'VALIDATION_ERROR');
+    }
+    const role = await Role.findById(roleId).select("name");
+    if (!role || role.name !== 'patient') {
+        throw new AppError('Invalid role ID', 400, 'VALIDATION_ERROR');
+    }
+
+    const permissions = getPermissionsForRole(role.name);
+    
+    const newUser = new User({
+        name, email, password, birthDate, roleId, status, cin, permissions
+    });
+    await newUser.save();
+
+    const userResponse = newUser.toObject();
+    delete userResponse.password;
+    delete userResponse.refreshToken;
+    return userResponse;
+};
+
 const createUser = async (userData) => {
     const { name, email, password, birthDate, roleId, status, cin } = userData;
 
@@ -94,6 +121,18 @@ const deleteUserById = async (userId) => {
     }
 };
 
+const getPatientById = async (userId) => {
+    const role = await Role.findById(roleId).select("name");
+    if (!mongoose.Types.ObjectId.isValid(userId) || role.name !== 'patient') {
+        throw new AppError('Invalid user ID format', 400, 'VALIDATION_ERROR');
+    }
+    const user = await User.findById(userId).select("-password -refreshToken");
+    if (!user) {
+        throw new AppError('User not found', 404, 'NOT_FOUND');
+    }
+    return user;
+};
+
 const getUserById = async (userId) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new AppError('Invalid user ID format', 400, 'VALIDATION_ERROR');
@@ -103,6 +142,18 @@ const getUserById = async (userId) => {
         throw new AppError('User not found', 404, 'NOT_FOUND');
     }
     return user;
+};
+
+const getPatients = async () => {
+  const users = await User.find()
+    .populate({
+      path: 'roleId',
+      select: 'name', 
+      match: { name: 'patient' } 
+    })
+    .select('-password -refreshToken');
+
+  return users.filter(user => user.roleId !== null);
 };
 
 const getAllUsers = async () => {
@@ -124,6 +175,48 @@ const updateUserById = async (userId, updateData) => {
     }
     return user;
 };
+
+const searchPatients = async (queryParams) => {
+  const { name, sortBy, page = 1, limit = 10 } = queryParams;
+
+  const patientRole = await Role.findOne({ name: "patient" });
+  if (!patientRole) {
+    throw new AppError("Role 'patient' not found", 404, "NOT_FOUND");
+  }
+
+  const filter = { roleId: patientRole._id };
+
+  if (name) {
+    filter.name = { $regex: name, $options: "i" };
+  }
+
+  let sort = {};
+  if (sortBy) {
+    const order = sortBy.startsWith("-") ? -1 : 1;
+    const field = sortBy.replace("-", "");
+    sort[field] = order;
+  }
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const [users, total] = await Promise.all([
+    User.find(filter)
+      .select("-password -refreshToken")
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit)),
+    User.countDocuments(filter)
+  ]);
+
+  return {
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    count: users.length,
+    data: users
+  };
+};
+
 
 const searchUsers = async (queryParams) => {
     const { name, role, sortBy, page = 1, limit = 10 } = queryParams;
@@ -221,7 +314,7 @@ const getPatientHistory = async (patientId, queryParams) => {
         const medicalRecordFilter = { patientId };
         if (from || to) medicalRecordFilter.resultDate = dateFilter;
 
-        const medicalRecords = await MedicalRecord.find(medicalRecordFilter)
+        const medicalRecords = await Consultation.find(medicalRecordFilter)
             .populate('appointmentId')
             .lean();
 
@@ -292,5 +385,8 @@ export default {
     getAllUsers,
     updateUserById,
     searchUsers,
-    getPatientHistory
+    getPatientHistory,
+    createUserPatient,
+    getPatients,
+    getPatientById
 };

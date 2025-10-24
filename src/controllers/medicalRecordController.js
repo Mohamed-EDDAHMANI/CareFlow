@@ -1,5 +1,5 @@
 import catchAsync from "../utils/catchAsync.js";
-import MedicalRecord from "../models/medicalRecordModel.js";
+import Consultation from "../models/medicalRecordModel.js";
 import Appointment from "../models/appointmentModel.js";
 import AppError from "../utils/appError.js";
 
@@ -14,7 +14,7 @@ export const createMedicalRecord = catchAsync(async (req, res, next) => {
     }
 
     // Create medical record
-    const medicalRecord = await MedicalRecord.create({
+    const consultation = await Consultation.create({
         patientId,
         appointmentId,
         priority: priority || 'Normal',
@@ -26,15 +26,15 @@ export const createMedicalRecord = catchAsync(async (req, res, next) => {
     });
 
     // Populate patient and appointment details
-    await medicalRecord.populate([
+    await consultation.populate([
         { path: 'patientId', select: 'name email cin' },
         { path: 'appointmentId', select: 'start end reason type' }
     ]);
 
     res.status(201).json({
         success: true,
-        message: 'Medical record created successfully',
-        data: medicalRecord,
+        message: 'consultation cree avec succé',
+        data: consultation,
         errors: req.errors && req.errors.length > 0 ? req.errors : undefined
     });
 });
@@ -68,13 +68,13 @@ export const getAllMedicalRecords = catchAsync(async (req, res, next) => {
     const sortSpec = { [sort]: order === 'desc' ? -1 : 1 };
 
     const [items, total] = await Promise.all([
-        MedicalRecord.find(filter)
+        Consultation.find(filter)
             .sort(sortSpec)
             .skip(skip)
             .limit(Number(limit))
             .populate('patientId', 'name email cin')
             .populate('appointmentId', 'start end reason type'),
-        MedicalRecord.countDocuments(filter)
+        Consultation.countDocuments(filter)
     ]);
 
     res.status(200).json({
@@ -107,13 +107,13 @@ export const getPatientMedicalRecords = catchAsync(async (req, res, next) => {
     const sortSpec = { [sort]: order === 'desc' ? -1 : 1 };
 
     const [items, total] = await Promise.all([
-        MedicalRecord.find(filter)
+        Consultation.find(filter)
             .sort(sortSpec)
             .skip(skip)
             .limit(Number(limit))
             .populate('patientId', 'name email cin')
             .populate('appointmentId', 'start end reason type'),
-        MedicalRecord.countDocuments(filter)
+        Consultation.countDocuments(filter)
     ]);
 
     res.status(200).json({
@@ -131,7 +131,7 @@ export const getPatientMedicalRecords = catchAsync(async (req, res, next) => {
 export const getMedicalRecordById = catchAsync(async (req, res, next) => {
     const { id } = req.params;
 
-    const medicalRecord = await MedicalRecord.findById(id)
+    const medicalRecord = await Consultation.findById(id)
         .populate('patientId', 'name email cin birthDate')
         .populate('appointmentId', 'start end reason type status');
 
@@ -151,7 +151,7 @@ export const updateMedicalRecord = catchAsync(async (req, res, next) => {
     const { priority, typeMedical, description, resultDate } = req.body;
 
     // Find existing record
-    const medicalRecord = await MedicalRecord.findById(id);
+    const medicalRecord = await Consultation.findById(id);
     if (!medicalRecord) {
         return next(new AppError('Medical record not found', 404, 'NOT_FOUND'));
     }
@@ -187,7 +187,7 @@ export const updateMedicalRecord = catchAsync(async (req, res, next) => {
 export const deleteMedicalRecord = catchAsync(async (req, res, next) => {
     const { id } = req.params;
 
-    const medicalRecord = await MedicalRecord.findByIdAndDelete(id);
+    const medicalRecord = await Consultation.findByIdAndDelete(id);
 
     if (!medicalRecord) {
         return next(new AppError('Medical record not found', 404, 'NOT_FOUND'));
@@ -212,7 +212,7 @@ export const addAction = catchAsync(async (req, res, next) => {
     }
 
     // Find medical record
-    const medicalRecord = await MedicalRecord.findById(id);
+    const medicalRecord = await Consultation.findById(id);
     if (!medicalRecord) {
         return next(new AppError('Medical record not found', 404, 'NOT_FOUND'));
     }
@@ -326,7 +326,7 @@ export const searchMedicalRecords = catchAsync(async (req, res, next) => {
         }
     ];
 
-    const result = await MedicalRecord.aggregate(pipeline);
+    const result = await Consultation.aggregate(pipeline);
     
     const total = result[0]?.metadata[0]?.total || 0;
     const data = result[0]?.data || [];
