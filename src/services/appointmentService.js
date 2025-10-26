@@ -68,7 +68,6 @@ function getEarliestSlotForDoctor(
   const appsForDoctor = appointments.filter(
     app => app.doctorId.toString() === doctorId.toString()
   );
-  console.log(appsForDoctor)//hadi kkhawya 
 
   while (current <= endSearch) {
     const dayName = current.toLocaleDateString("fr-FR", { weekday: "long" });

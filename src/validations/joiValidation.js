@@ -243,3 +243,77 @@ export const updateLabResultSchema = Joi.object({
   resultsData: Joi.string().required().messages({ 'string.base': 'peut etre un chaine de caracters' }),
 }).min(1).messages({ 'object.min': 'Fournissez au moins un champ à mettre à jour' });
 
+
+export const createPharmacySchema = Joi.object({
+  identifiant: Joi.string().trim().required().messages({
+      'any.required': 'identifiant requis',
+      'string.empty': 'identifiant ne peut pas être vide',
+    }),
+
+  nom: Joi.string().trim().required().messages({
+      'any.required': 'nom requis',
+      'string.empty': 'nom ne peut pas être vide',
+    }),
+
+  coordonnees: Joi.object({
+    adresse: Joi.string().trim().required().messages({
+      'any.required': 'adresse requise',
+      'string.empty': 'adresse ne peut pas être vide',
+    }),
+    ville: Joi.string().trim().required().messages({
+      'any.required': 'ville requise',
+      'string.empty': 'ville ne peut pas être vide',
+    }),
+    latitude: Joi.number().required().messages({
+      'any.required': 'latitude requise',
+      'number.base': 'latitude doit être un nombre',
+    }),
+    longitude: Joi.number().required().messages({
+      'any.required': 'longitude requise',
+      'number.base': 'longitude doit être un nombre',
+    }),
+  }).required().messages({
+    'any.required': 'coordonnees requises',
+  }),
+
+  horaires: Joi.string()
+    .trim()
+    .optional()
+    .messages({
+      'string.empty': 'horaires ne peut pas être vide',
+    }),
+});
+
+export const createPrescriptionSchema = Joi.object({
+  patientId: Joi.string()
+    .required()
+    .messages({ 'any.required': 'patientId requis', 'string.empty': 'patientId ne peut pas être vide' }),
+
+  medecinId: Joi.string()
+    .required()
+    .messages({ 'any.required': 'medecinId requis', 'string.empty': 'medecinId ne peut pas être vide' }),
+
+  pharmacyId: Joi.string()
+    .optional()
+    .allow(null)
+    .messages({ 'string.empty': 'pharmacyId ne peut pas être vide' }),
+
+  status: Joi.string()
+    .valid('draft', 'signed', 'sent', 'dispensed')
+    .optional()
+    .messages({ 'any.only': 'status doit être l-un de: draft, signed, sent, dispensed' }),
+
+  medications: Joi.array()
+    .items(
+      Joi.object({
+        medicament: Joi.string().required().messages({ 'any.required': 'medicament requis' }),
+        dosage: Joi.string().optional(),
+        frequence: Joi.string().optional(),
+        duree: Joi.string().optional(),
+      })
+    )
+    .min(1)
+    .required()
+    .messages({ 'any.required': 'au moins un médicament est requis' }),
+});
+
