@@ -143,6 +143,7 @@ export const updateAppointmentStatusSchemaJoi = Joi.object({
 // Note: documents field handled by multer, not validated in Joi
 export const medicalRecordSchemaJoi = Joi.object({
   patientId: Joi.string().required().messages({ 'any.required': 'Le patient est requis' }),
+  medecinId: Joi.string().required().messages({ 'any.required': 'Le medecin est requis' }),
   appointmentId: Joi.string().required().messages({ 'any.required': "L'identifiant du rendez-vous est requis" }),
   priority: Joi.string().valid('Normal', 'À suivre', 'Traitement nécessaire', 'Urgent').default('Normal')
     .messages({ 'any.only': 'Priorité invalide' }),
@@ -201,7 +202,8 @@ export const updateWorkingHourSchemaJoi = Joi.object({
   active: Joi.boolean().optional()
 });
 
-const objectId = Joi.string().pattern(/^[0-9a-fA-F]{24}$/).message("ObjectId invalide");
+
+const objectId = Joi.string().pattern(/^[0-9a-fA-F]{24}$/).messages({ 'string.pattern.base': 'ObjectId invalide' });
 
 export const createOrderSchema = Joi.object({
   patientId: objectId.required().messages({ 'any.required': 'Le patient est requis' }),
@@ -210,7 +212,7 @@ export const createOrderSchema = Joi.object({
   orderDate: Joi.date().iso().optional().default(() => new Date()),
   status: Joi.string().valid('ordered', 'received', 'validated').optional().default('ordered')
     .messages({ 'any.only': "Le statut doit être 'ordered', 'received' ou 'validated'" }),
-  tests: Joi.array().items(Joi.string().min(1)).min(1).required().messages({ 'array.min': 'Au moins un test est requis', 'array.base': 'Les tests doivent être un tableau' })
+  tests: Joi.string().required().messages({ 'array.min': 'Au moins un test est requis', 'array.base': 'Les tests doivent être un tableau' })
 });
 
 export const updateOrderSchema = Joi.object({
@@ -220,5 +222,24 @@ export const updateOrderSchema = Joi.object({
   orderDate: Joi.date().iso().optional(),
   status: Joi.string().valid('ordered', 'received', 'validated').optional(),
   tests: Joi.array().items(Joi.string().min(1)).optional()
+}).min(1).messages({ 'object.min': 'Fournissez au moins un champ à mettre à jour' });
+
+export const createLabResultSchema = Joi.object({
+  resultsData: Joi.object().unknown(true).optional().messages({ 'object.base': 'resultsData doit être un objet' }),
+  reportDocumentId: objectId.optional().messages({ 'string.pattern.base': 'reportDocumentId invalide' }),
+  receivedDate: Joi.date().iso().optional().messages({ 'date.format': 'receivedDate doit être une date ISO' }),
+  validatedDate: Joi.date().iso().optional().messages({ 'date.format': 'validatedDate doit être une date ISO' }),
+  anomalyFlags: Joi.string().optional().messages({ 'string.base': 'anomalyFlags doit être un tableau de chaînes' }),
+  resultsData: Joi.string().required().messages({ 'string.base': 'peut etre un chaine de caracters' }),
+}).or('resultsData', 'reportDocumentId').messages({ 'object.missing': 'Fournissez au moins resultsData ou reportDocumentId', });
+
+
+export const updateLabResultSchema = Joi.object({
+  resultsData: Joi.object().unknown(true).optional().messages({ 'object.base': 'resultsData doit être un objet' }),
+  reportDocumentId: objectId.optional().messages({ 'string.pattern.base': 'reportDocumentId invalide' }),
+  receivedDate: Joi.date().iso().optional().messages({ 'date.format': 'receivedDate doit être une date ISO' }),
+  validatedDate: Joi.date().iso().optional().messages({ 'date.format': 'validatedDate doit être une date ISO' }),
+  anomalyFlags: Joi.string().optional().messages({ 'array.base': 'anomalyFlags doit être un tableau de chaînes' }),
+  resultsData: Joi.string().required().messages({ 'string.base': 'peut etre un chaine de caracters' }),
 }).min(1).messages({ 'object.min': 'Fournissez au moins un champ à mettre à jour' });
 

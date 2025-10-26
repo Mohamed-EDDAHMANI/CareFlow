@@ -101,13 +101,13 @@ export default async function initDB() {
         if (whCount === 0) {
             console.log("initDB: creating default working hours...");
             const days = [
-                { day: "Lundi", start: "08:00", end: "17:00", active: true },
-                { day: "Mardi", start: "08:00", end: "17:00", active: true },
-                { day: "Mercredi", start: "08:00", end: "17:00", active: true },
-                { day: "Jeudi", start: "08:00", end: "17:00", active: true },
-                { day: "Vendredi", start: "08:00", end: "17:00", active: true },
-                { day: "Samedi", start: "09:00", end: "13:00", active: true },
-                { day: "Dimanche", start: "00:00", end: "00:00", active: false }
+                { day: "lundi", start: "08:00", end: "17:00", active: true },
+                { day: "mardi", start: "08:00", end: "17:00", active: true },
+                { day: "mercredi", start: "08:00", end: "17:00", active: true },
+                { day: "jeudi", start: "08:00", end: "17:00", active: true },
+                { day: "vendredi", start: "08:00", end: "17:00", active: true },
+                { day: "samedi", start: "09:00", end: "13:00", active: true },
+                { day: "dimanche", start: "00:00", end: "00:00", active: false }
             ];
             await WorkingHour.insertMany(days);
             console.log("initDB: working hours created");

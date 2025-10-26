@@ -45,6 +45,7 @@ app.use('/apiCli', routes);
 
 // ===== API External =====
 app.use('/apiLab', labRouters);
+
 app.use('/apiPhar', pharRouters);
 
 

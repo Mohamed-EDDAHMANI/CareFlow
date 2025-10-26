@@ -52,15 +52,28 @@ async function getSchedulingData(startSearch, endSearch) {
   return { appointments, workingHours, holidays };
 }
 
-function getEarliestSlotForDoctor(doctorId, appointments, workingHours, holidays, startSearch, endSearch) {
+function getEarliestSlotForDoctor(
+  doctorId,
+  appointments,
+  workingHours,
+  holidays,
+  startSearch,
+  endSearch
+) {
   const slotLengthMs = 60 * 60000;
   let current = new Date(startSearch);
-  const appsForDoctor = appointments.filter(app => app.doctorId.toString() === doctorId.toString());
 
-  while (current < endSearch) {
-    const dayName = current.toLocaleDateString('fr-FR', { weekday: 'long' });
-    const isHoliday = holidays.some(h => h.date.toDateString() === current.toDateString());
-    if (isHoliday) {
+  const holidayDates = new Set(holidays.map(h => new Date(h.date).toDateString()));
+
+  const appsForDoctor = appointments.filter(
+    app => app.doctorId.toString() === doctorId.toString()
+  );
+  console.log(appsForDoctor)//hadi kkhawya 
+
+  while (current <= endSearch) {
+    const dayName = current.toLocaleDateString("fr-FR", { weekday: "long" });
+
+    if (holidayDates.has(current.toDateString())) {
       current.setDate(current.getDate() + 1);
       continue;
     }
@@ -71,28 +84,43 @@ function getEarliestSlotForDoctor(doctorId, appointments, workingHours, holidays
       continue;
     }
 
-    const [startH, startM] = workingHour.start.split(':').map(Number);
-    const [endH, endM] = workingHour.end.split(':').map(Number);
+    const [startH, startM] = workingHour.start.split(":").map(Number);
+    const [endH, endM] = workingHour.end.split(":").map(Number);
+
     let slotTime = new Date(current);
     slotTime.setHours(startH, startM, 0, 0);
+
     const slotEnd = new Date(current);
     slotEnd.setHours(endH, endM, 0, 0);
 
+    if (slotTime < startSearch) slotTime = new Date(startSearch);
+
     while (slotTime.getTime() + slotLengthMs <= slotEnd.getTime()) {
       const slotEndTime = new Date(slotTime.getTime() + slotLengthMs);
-      const conflict = appsForDoctor.some(app =>
-        app.start.getTime() < slotEndTime.getTime() &&
-        app.end.getTime() > slotTime.getTime()
-      );
+
+      const conflict = appsForDoctor.some(app => {
+        const appStart = new Date(app.start);
+        const appEnd = new Date(app.end);
+        return (
+          appStart.getTime() < slotEndTime.getTime() &&
+          appEnd.getTime() > slotTime.getTime()
+        );
+      });
+
       if (!conflict) {
         return { doctorId, start: new Date(slotTime) };
       }
+
       slotTime = new Date(slotTime.getTime() + slotLengthMs);
     }
+
     current.setDate(current.getDate() + 1);
+    current.setHours(0, 0, 0, 0);
   }
+
   return null;
 }
+
 
 function findBestDoctorByEarliestSlot(doctors, appointments, workingHours, holidays, startSearch, endSearch) {
   const candidates = [];
@@ -195,10 +223,10 @@ const createAppointment = async (user, patientId, { reason, type, weekOffset, do
 /**
  * Récupère tous les RDV avec filtres et pagination.
  */
-const getOwnAppointments = async (id , queryParams) => {
+const getOwnAppointments = async (id, queryParams) => {
   const { page = 1, limit = 20, status, from, to, sort = 'start', order = 'asc' } = queryParams;
 
-  const filter = { patientId: id};
+  const filter = { patientId: id };
   if (status) filter.status = status;
   if (from || to) {
     filter.start = {};

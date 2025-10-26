@@ -18,6 +18,7 @@ export const uploadFiles = (req, res, next) => {
 
     if (err) {
       if (err.code === "LIMIT_FILE_SIZE") {
+        console.log('errors')
         req.errors.push({
           fileName: null, // i cant get the file name from multer error so the frent cannot know the file that have the error
           field: err.field,

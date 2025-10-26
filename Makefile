@@ -1,8 +1,8 @@
 # ---------------------------------
 # Variables
 # ---------------------------------
-BASE_URL = http://localhost:3000
-API_URL = $(BASE_URL)/api
+BASE_URL = http://localhost:5000
+API_URL = $(BASE_URL)/apiCli
 METHOD = POST
 ROUTE = /auth/login
 CONTENT_TYPE = Content-Type: application/json

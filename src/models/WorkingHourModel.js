@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const workingHourSchema = new mongoose.Schema({
   day: { 
     type: String, 
-    enum: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"], 
+    enum: ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"], 
     required: true 
   },
   start: { type: String, required: true }, // format "08:00"
