@@ -451,7 +451,7 @@ const searchAppointments = async (queryParams) => {
       } else {
         element.document = [];
       }
-      return element.toObject();
+      return element;
     })
   );
 
@@ -494,6 +494,33 @@ const updateAppointmentStatus = async (appointmentId, status, user) => {
   return result;
 };
 
+/**
+ * Récupère les documents d'un rendez-vous avec leurs URLs présignées.
+ */
+const getAppointmentDocuments = async (appointmentId, user) => {
+  const appointment = await Appointment.findById(appointmentId);
+
+  if (!appointment) {
+    throw new AppError('Appointment not found', 404, 'NOT_FOUND');
+  }
+
+  if (!appointment.document || appointment.document.length === 0) {
+    return [];
+  }
+
+  const documentsWithUrls = await Promise.all(
+    appointment.document.map(async (doc) => {
+      const url = await getFileUrl(doc.fileName);
+      return {
+        ...doc.toObject(),
+        url
+      };
+    })
+  );
+
+  return documentsWithUrls;
+};
+
 
 export default {
   createAppointment,
@@ -502,5 +529,6 @@ export default {
   getAppointmentById,
   searchAppointments,
   updateAppointmentStatus,
-  getOwnAppointments
+  getOwnAppointments,
+  getAppointmentDocuments
 };

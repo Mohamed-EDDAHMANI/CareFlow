@@ -45,6 +45,30 @@ export const loginSchemaJoi = Joi.object({
     })
 });
 
+export const updateUserSchemaJoi = Joi.object({
+  email: Joi.string().email().required()
+    .messages({
+      'string.email': "L'email n'est pas valide",
+      'string.empty': "L'email est requis",
+      'any.required': "L'email est requis"
+    }),
+  name: Joi.string().min(3).max(50).required()
+    .messages({
+      'string.min': 'Le nom doit contenir au moins 3 caractères',
+      'string.max': 'Le nom doit contenir au maximum 50 caractères',
+      'any.required': 'Le nom est requis'
+    }),
+  birthDate: Joi.date().optional().messages({ 'date.base': 'La date de naissance doit être une date valide' }),
+  roleId: Joi.string().required().messages({ 'any.required': "L'identifiant du rôle est requis" }),
+  status: Joi.string().valid('active', 'suspended').default('active')
+    .messages({ 'any.only': "Le statut doit être 'active' ou 'suspended'" }),
+  cin: Joi.string().required().messages({ 'any.required': 'Le CIN est requis' })
+});
+
+export const suspendUserSchemaJoi = Joi.object({
+  reason: Joi.string().optional().allow('', null).messages({ 'string.base': 'La raison doit être une chaîne de caractères' })
+});
+
 export const userSchemaJoi = Joi.object({
   email: Joi.string().email().required()
     .messages({

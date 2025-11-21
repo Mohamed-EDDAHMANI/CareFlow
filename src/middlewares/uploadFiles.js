@@ -9,6 +9,20 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 }, // ≤ 20 MB
 });
 
+// Ensure bucket exists
+const ensureBucketExists = async () => {
+  try {
+    const bucketExists = await s3.bucketExists(process.env.MINIO_BUCKET);
+    if (!bucketExists) {
+      await s3.makeBucket(process.env.MINIO_BUCKET, 'us-east-1');
+      console.log(`Bucket ${process.env.MINIO_BUCKET} created successfully`);
+    }
+  } catch (error) {
+    console.error('Error ensuring bucket exists:', error);
+    throw error;
+  }
+};
+
 export const uploadFiles = (req, res, next) => {
   const multerUpload = upload.array("documents", 5); // max 5 files
 
@@ -18,7 +32,6 @@ export const uploadFiles = (req, res, next) => {
 
     if (err) {
       if (err.code === "LIMIT_FILE_SIZE") {
-        console.log('errors')
         req.errors.push({
           fileName: null, // i cant get the file name from multer error so the frent cannot know the file that have the error
           field: err.field,
@@ -30,6 +43,17 @@ export const uploadFiles = (req, res, next) => {
     }
 
     const files = req.files || [];
+
+     // Ensure bucket exists before uploading
+    try {
+      await ensureBucketExists();
+    } catch (bucketError) {
+      req.errors.push({
+        fileName: null,
+        message: "Erreur lors de la création du bucket: " + bucketError.message,
+      });
+      return next();
+    }
 
     for (const file of files) {
       const allowedMimes = ["application/pdf", "image/jpeg", "image/png"];
@@ -61,6 +85,7 @@ export const uploadFiles = (req, res, next) => {
           mimeType: file.mimetype,
           size: file.size,
         });
+        console.log(req.uploadedFiles)
       } catch (uploadError) {
         req.errors.push({
           fileName: file.originalname,

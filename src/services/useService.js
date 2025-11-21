@@ -156,8 +156,20 @@ const getPatients = async () => {
   return users.filter(user => user.roleId !== null);
 };
 
+const getDoctors = async () => {
+  const users = await User.find()
+    .populate({
+      path: 'roleId',
+      select: 'name', 
+      match: { name: 'doctore' } 
+    })
+    .select('-password -refreshToken');
+
+  return users.filter(user => user.roleId !== null);
+};
+
 const getAllUsers = async () => {
-    return User.find().select("-password -refreshToken");
+    return User.find().select("-password -refreshToken").populate('roleId', 'name');
 };
 
 const updateUserById = async (userId, updateData) => {
@@ -167,7 +179,8 @@ const updateUserById = async (userId, updateData) => {
     
     const user = await User.findByIdAndUpdate(userId, updateData, {
         new: true,
-        runValidators: true
+        runValidators: true,
+        context: 'query'
     }).select("-password -refreshToken");
 
     if (!user) {
@@ -378,6 +391,36 @@ const getPatientHistory = async (patientId, queryParams) => {
 };
 
 
+const suspendUserById = async (userId, reason = null) => {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError('Invalid user ID format', 400, 'VALIDATION_ERROR');
+  }
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError('User not found', 404, 'NOT_FOUND');
+  }
+  await user.suspend(reason);
+  const userResponse = user.toObject();
+  delete userResponse.password;
+  delete userResponse.refreshToken;
+  return userResponse;
+};
+
+const activateUserById = async (userId) => {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError('Invalid user ID format', 400, 'VALIDATION_ERROR');
+  }
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError('User not found', 404, 'NOT_FOUND');
+  }
+  await user.activate();
+  const userResponse = user.toObject();
+  delete userResponse.password;
+  delete userResponse.refreshToken;
+  return userResponse;
+};
+
 export default {
     createUser,
     deleteUserById,
@@ -388,5 +431,8 @@ export default {
     getPatientHistory,
     createUserPatient,
     getPatients,
-    getPatientById
+    getDoctors,
+    getPatientById,
+    suspendUserById,
+    activateUserById
 };

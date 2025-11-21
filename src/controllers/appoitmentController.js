@@ -78,3 +78,15 @@ export const updateAppointmentStatus = catchAsync(async (req, res, next) => {
     data: updatedAppointment
   });
 });
+
+export const getAppointmentDocuments = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  
+  const documents = await appointmentService.getAppointmentDocuments(id, req.user);
+  
+  res.status(200).json({
+    success: true,
+    count: documents.length,
+    data: documents
+  });
+});

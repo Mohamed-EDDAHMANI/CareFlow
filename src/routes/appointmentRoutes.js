@@ -6,7 +6,8 @@ import {
     getAppointmentById, 
     searchAppointments,
     updateAppointmentStatus,
-    getOwnAppointments
+    getOwnAppointments,
+    getAppointmentDocuments
 } from '../controllers/appoitmentController.js'
 import { protect, authorize } from '../middlewares/authorize.js';
 import { uploadFiles } from '../middlewares/uploadFiles.js';
@@ -113,5 +114,30 @@ router.get('/:id', protect, authorize('appointment_view_all'), getAppointmentByI
  * }
  */
 router.patch('/:id/status', protect,  authorize('appointment_update'), validate(updateAppointmentStatusSchemaJoi), updateAppointmentStatus);
+
+/**
+ * @route   GET /api/appointments/:id/documents
+ * @desc    Get all documents for a specific appointment with presigned URLs
+ * @access  Private (requires: appointment_view_all or appointment_view_own permission)
+ * @params  {
+ *   id: string (required) - Appointment ID
+ * }
+ * @response {
+ *   success: boolean,
+ *   count: number,
+ *   data: [{
+ *     originalName: string,
+ *     fileName: string,
+ *     mimeType: string,
+ *     size: number,
+ *     category: string,
+ *     _id: string,
+ *     createdAt: date,
+ *     updatedAt: date,
+ *     url: string (presigned URL valid for 24h)
+ *   }]
+ * }
+ */
+router.get('/:id/documents', protect, authorize('appointment_view_all', 'appointment_view_own'), getAppointmentDocuments);
 
 export default router;

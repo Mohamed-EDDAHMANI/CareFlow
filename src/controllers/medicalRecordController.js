@@ -5,6 +5,8 @@ import AppError from "../utils/appError.js";
 
 // CREATE - Create a new medical record with optional documents
 export const createMedicalRecord = catchAsync(async (req, res, next) => {
+    console.log(req.uploadedFiles);
+    console.log(req.errors);
     const { patientId, appointmentId, medecinId, priority, typeMedical, description, resultDate } = req.body;
 
     // Verify appointment exists

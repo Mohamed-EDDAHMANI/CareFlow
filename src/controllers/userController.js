@@ -68,6 +68,15 @@ export const getPatients = catchAsync(async (req, res, next) => {
     });
 });
 
+export const getDoctors = catchAsync(async (req, res, next) => {
+    const users = await userService.getDoctors();
+    
+    res.status(200).json({
+        success: true,
+        data: users
+    });
+});
+
 export const updateUser = catchAsync(async (req, res, next) => {
     const updatedUser = await userService.updateUserById(req.params.id, req.body);
     
@@ -75,6 +84,25 @@ export const updateUser = catchAsync(async (req, res, next) => {
         success: true,
         message: "User updated successfully",
         data: updatedUser
+    });
+});
+
+export const suspendUser = catchAsync(async (req, res, next) => {
+    const reason = req.body.reason || null;
+    const suspended = await userService.suspendUserById(req.params.id, reason);
+    res.status(200).json({
+        success: true,
+        message: 'User suspended successfully',
+        data: suspended
+    });
+});
+
+export const activateUser = catchAsync(async (req, res, next) => {
+    const activated = await userService.activateUserById(req.params.id);
+    res.status(200).json({
+        success: true,
+        message: 'User activated successfully',
+        data: activated
     });
 });
 

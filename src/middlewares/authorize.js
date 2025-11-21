@@ -28,7 +28,11 @@ export const protect = catchAsync(async (req, res, next) => {
   }
 
   // Check if user is active
-  if (user.status !== "active") {
+  // Allow suspended users with manage_users_suspend permission to access user management endpoints
+  const isUserManagementEndpoint = req.path.includes('/suspend') || req.path.includes('/activate');
+  const hasUserManagementPermission = user.permissions && user.permissions.manage_users_suspend;
+  
+  if (user.status !== "active" && !(isUserManagementEndpoint && hasUserManagementPermission)) {
     return next(new AppError('User is suspended', 403, 'USER_SUSPENDED'));
   }
 

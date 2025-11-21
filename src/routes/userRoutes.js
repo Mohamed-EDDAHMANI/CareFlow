@@ -9,10 +9,14 @@ import {
     getPatientHistory,
     createUserPatient,
     getPatients,
+    getDoctors,
     getPatientById,
-    searchPatients
+    searchPatients,
+    suspendUser,
+    activateUser
 } from '../controllers/userController.js';
-import { userSchemaJoi } from '../validations/joiValidation.js';
+import { suspendUserSchemaJoi } from '../validations/joiValidation.js';
+import { userSchemaJoi, updateUserSchemaJoi } from '../validations/joiValidation.js';
 import validate from '../middlewares/validate.js';
 import { authorize, protect } from '../middlewares/authorize.js';
 
@@ -51,7 +55,7 @@ router.post('/create-patient', protect, authorize('patient_create'), validate(us
 router.post('/create', protect, authorize('manage_users_create'), validate(userSchemaJoi), createUser);
 
 /**
- * @route   GET /api/users
+ * @route   GET /api/users/patient
  * @desc    Get all users with optional filters
  * @access  Private
  * @query   {
@@ -62,6 +66,13 @@ router.post('/create', protect, authorize('manage_users_create'), validate(userS
  * }
  */
 router.get('/patient', protect, authorize('patient_view'), getPatients);
+
+/**
+ * @route   GET /api/users/doctor
+ * @desc    Get all doctors
+ * @access  Private
+ */
+router.get('/doctor', protect, authorize('patient_view'), getDoctors);
 
 /**
  * @route   GET /api/users
@@ -155,7 +166,13 @@ router.get('/:id', protect, authorize('manage_users_view'), getUserById);
  *   cin: string (required) - National ID
  * }
  */
-router.put('/:id', protect, authorize('patient_update'), validate(userSchemaJoi), updateUser);
+router.put('/:id', protect, authorize('patient_update'), validate(updateUserSchemaJoi), updateUser);
+
+// Suspend a user (admin action)
+router.patch('/:id/suspend', protect, authorize('manage_users_suspend'), validate(suspendUserSchemaJoi), suspendUser);
+
+// Activate a user (admin action)
+router.patch('/:id/activate', protect, authorize('manage_users_suspend'), activateUser);
 
 /**
  * @route   DELETE /api/users/:id

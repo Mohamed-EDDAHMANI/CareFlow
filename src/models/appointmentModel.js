@@ -5,7 +5,7 @@ const appointmentSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  type: { type: String, enum: ["consultation générale", "suivi"], default: "consultation générale" },
+  type: { type: String, enum: ["consultation générale", "suivi", "follow-up", "emergency", "check-up"], default: "consultation générale" },
   start: { type: Date, required: true },
   end: { type: Date, required: true },
   reason: { type: String },

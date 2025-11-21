@@ -69,7 +69,7 @@ export const login = catchAsync(async (req, res, next) => {
     }).status(200).json({
         success: true,
         accessToken,
-        permissions: existingUser.permissions
+        user: existingUser,
     });
 });
 

@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema({
   roleId: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true },
   status: { type: String, enum: ["active", "suspended"], default: "active" },
   refreshToken: { type: String },
+  suspendedAt: { type: Date },
+  suspendReason: { type: String },
   cin: { type: String, required: true, unique: true },
   permissions: {
     // --- Gestion Système & Admin ---
@@ -114,14 +116,18 @@ userSchema.methods.isActive = function () {
 };
 
 // Suspend / activate user
-userSchema.methods.suspend = async function () {
+userSchema.methods.suspend = async function (reason = null) {
   this.status = "suspended";
+  this.suspendedAt = new Date();
+  if (reason) this.suspendReason = reason;
   await this.save();
   return this;
 };
 
 userSchema.methods.activate = async function () {
   this.status = "active";
+  this.suspendedAt = undefined;
+  this.suspendReason = undefined;
   await this.save();
   return this;
 };
